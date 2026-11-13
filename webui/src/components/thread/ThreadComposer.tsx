@@ -88,6 +88,7 @@ import {
 } from "@/components/thread/WorkspaceControls";
 import {
   ModelPresetBadge,
+  type ModelCatalogOption,
   type ModelPresetOption,
 } from "@/components/thread/ModelPresetBadge";
 import type { ComposerUsageControl } from "@/components/thread/ComposerUsagePopover";
@@ -236,6 +237,9 @@ interface ThreadComposerProps {
   modelPreset?: string | null;
   modelPresets?: ModelPresetOption[];
   onModelPresetChange?: (name: string) => void;
+  catalogModels?: ModelCatalogOption[];
+  currentModel?: string | null;
+  onModelChange?: (model: string, provider: string, contextWindow?: number) => void;
   modelProvider?: string | null;
   modelProviderLabel?: string | null;
   modelNeedsSetup?: boolean;
@@ -785,6 +789,9 @@ export function ThreadComposer({
   modelPreset = null,
   modelPresets = [],
   onModelPresetChange,
+  catalogModels = [],
+  currentModel = null,
+  onModelChange,
   modelProvider = null,
   modelProviderLabel = null,
   modelNeedsSetup = false,
@@ -2216,6 +2223,9 @@ export function ThreadComposer({
       modelPreset={modelPreset}
       modelPresets={modelPresets}
       onPresetChange={onModelPresetChange}
+      catalogModels={catalogModels}
+      currentModel={currentModel}
+      onModelChange={onModelChange}
       onManageModels={onManageModels}
       onRequestComposerFocus={() => textareaRef.current?.focus()}
       provider={modelProvider}

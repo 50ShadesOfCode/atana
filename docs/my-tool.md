@@ -79,7 +79,7 @@ my(action="check", key="web_config.enable")
 
 ## set — Runtime tuning
 
-Changes do not require a restart. `model_preset` is saved for the current session and applies to its next turn. Other writable settings are updated in memory; changing the iteration limit does not extend an already-running agent loop. Direct `model` and `context_window_tokens` writes are rejected during an active session because those setters change the shared instance default. Configure a named preset for model or context-window changes instead.
+Changes do not require a restart. `model` and `model_preset` are saved for the current session and apply to its next turn; setting one clears the other. Other writable settings are updated in memory; changing the iteration limit does not extend an already-running agent loop. Direct `context_window_tokens` writes are rejected during an active session because that setter changes the shared instance default; switch models instead.
 
 ```text
 my(action="set", key="max_iterations", value=80)
@@ -105,8 +105,8 @@ These parameters have type and range validation — invalid values are rejected:
 | Parameter | Type | Range | Purpose |
 |-----------|------|-------|---------|
 | `max_iterations` | int | 1–100 | Max model/tool iterations per agent run |
-| `context_window_tokens` | int | 4,096–1,000,000 | Instance default; during a session, select through a preset |
-| `model` | str | non-empty | Instance default; during a session, select through a preset |
+| `context_window_tokens` | int | 4,096–1,000,000 | Instance default; rejected during an active session |
+| `model` | str | non-empty | Current session's model for its next turn; no preset required |
 | `model_preset` | str | configured preset name | Current session's preset for its next turn |
 
 `provider_retry_mode` and `max_tool_result_chars` must match their existing value types. Setting `workspace` changes only the legacy display string, not the active project, shell directory, or file permissions. Unknown top-level keys store JSON-safe scratchpad values rather than creating runtime settings. Nested configuration fields cannot be changed through `my`.

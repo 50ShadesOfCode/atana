@@ -96,7 +96,7 @@ class RuntimeControl(Protocol):
 
     def snapshot(self) -> RuntimeSnapshot: ...
 
-    def set_model(self, model: str) -> LLMRuntime: ...
+    async def set_model(self, model: str, *, session_key: str | None) -> LLMRuntime: ...
 
     async def set_model_preset(
         self,
@@ -153,6 +153,15 @@ class _RuntimeControlTarget(Protocol):
     def set_runtime_max_iterations(self, value: int) -> None: ...
 
     def set_model_preset(self, name: str | None) -> LLMRuntime: ...
+
+    async def set_session_model(
+        self,
+        session_key: str,
+        model: str,
+        *,
+        provider: str = "auto",
+        context_window_tokens: int | None = None,
+    ) -> LLMRuntime: ...
 
     async def set_session_model_preset(
         self,
@@ -226,7 +235,9 @@ class AgentRuntimeControl:
             workspace_sandbox=self._workspace_sandbox().as_dict(),
         )
 
-    def set_model(self, model: str) -> LLMRuntime:
+    async def set_model(self, model: str, *, session_key: str | None = None) -> LLMRuntime:
+        if session_key is not None:
+            return await self.__target.set_session_model(session_key, model)
         return self.__target.set_runtime_model(model)
 
     async def set_model_preset(

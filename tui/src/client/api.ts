@@ -436,6 +436,9 @@ export async function fetchSessions(
       modelPreset: typeof value.model_preset === "string" && value.model_preset.trim()
         ? value.model_preset.trim()
         : null,
+      model: typeof value.model === "string" && value.model.trim()
+        ? value.model.trim()
+        : null,
       ...(isRecoveryState(value.recovery_state)
         ? { recoveryState: value.recovery_state }
         : {}),

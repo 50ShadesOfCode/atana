@@ -11,12 +11,14 @@ from typing import TYPE_CHECKING, Any, cast
 from loguru import logger
 
 from nanobot import __version__
+from nanobot.agent import model_presets as preset_helpers
 from nanobot.bus.events import OutboundMessage
 from nanobot.command.router import CommandContext, CommandRouter
 from nanobot.command.spec import BuiltinCommandSpec
 from nanobot.command.spec import CommandLifecycle as CommandLifecycle
 from nanobot.command.user_shell import cmd_user_shell
 from nanobot.providers.base import LLMUsage
+from nanobot.session.model_selection import model_selection_from_metadata
 from nanobot.utils.cancellation import shield_and_drain
 from nanobot.utils.helpers import build_status_content
 from nanobot.utils.restart import set_restart_notice_to_env
@@ -65,10 +67,10 @@ CORE_COMMAND_SPECS: tuple[BuiltinCommandSpec, ...] = (
     ),
     BuiltinCommandSpec(
         "/model",
-        "Switch model preset",
-        "Show or switch the active model preset.",
+        "Switch model",
+        "Show or switch the active model for this session.",
         "brain",
-        "[preset]",
+        "[preset|model]",
         accepts_args=True,
     ),
     BuiltinCommandSpec(
@@ -326,19 +328,50 @@ async def _model_command_status(loop: AgentLoop, session: Session) -> str:
             "## Model",
             f"- Current selection error: {_command_error_message(exc)}",
             f"- Available presets: {_format_preset_names(names)}",
-            "- Switch with `/model <preset>`.",
+            "- Switch with `/model <preset>` or `/model <model-id>`.",
         ])
-    active = runtime.model_preset or "default"
+    active = runtime.model_preset or (
+        "—" if model_selection_from_metadata(session.metadata) is not None else "default"
+    )
     return "\n".join([
         "## Model",
         f"- Current model: `{runtime.model}`",
         f"- Current preset: `{active}`",
         f"- Available presets: {_format_preset_names(names)}",
+        "- Switch with `/model <preset>` or `/model <model-id> [--provider <name>] [--context <tokens>]`.",
     ])
 
 
+def _parse_model_args(args: str) -> tuple[str, str | None, int | None]:
+    """Split a target from the optional --provider/--context flags."""
+    tokens = args.split()
+    target: list[str] = []
+    provider: str | None = None
+    context_window_tokens: int | None = None
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "--provider" and index + 1 < len(tokens):
+            provider = tokens[index + 1]
+            index += 2
+            continue
+        if token == "--context" and index + 1 < len(tokens):
+            raw = tokens[index + 1]
+            try:
+                context_window_tokens = int(raw)
+            except ValueError:
+                raise ValueError(f"context window must be an integer, got {raw!r}") from None
+            if context_window_tokens <= 0:
+                raise ValueError("context window must be a positive integer")
+            index += 2
+            continue
+        target.append(token)
+        index += 1
+    return " ".join(target), provider, context_window_tokens
+
+
 async def cmd_model(ctx: CommandContext) -> OutboundMessage:
-    """Show or switch model presets."""
+    """Show the current model or switch this session to a preset or model id."""
     loop = ctx.loop
     args = ctx.args.strip()
     metadata = {**dict(ctx.msg.metadata or {}), "render_as": "text"}
@@ -352,16 +385,42 @@ async def cmd_model(ctx: CommandContext) -> OutboundMessage:
             metadata=metadata,
         )
 
-    name = args
     try:
-        runtime = await loop.set_session_model_preset(ctx.key, name)
+        target, provider, context_window_tokens = _parse_model_args(args)
+    except ValueError as exc:
+        return OutboundMessage(
+            channel=ctx.msg.channel,
+            chat_id=ctx.msg.chat_id,
+            content=f"Could not switch model: {exc}",
+            metadata=metadata,
+        )
+
+    preset_name: str | None = None
+    if target and provider is None and context_window_tokens is None:
+        try:
+            preset_name = preset_helpers.normalize_preset_name(target, dict(loop.model_presets))
+        except KeyError:
+            preset_name = None
+
+    try:
+        if preset_name is not None:
+            runtime = await loop.set_session_model_preset(ctx.key, preset_name)
+        elif target:
+            runtime = await loop.set_session_model(
+                ctx.key,
+                target,
+                provider=provider or "auto",
+                context_window_tokens=context_window_tokens,
+            )
+        else:
+            raise ValueError("model or preset name is required")
     except (KeyError, ValueError) as exc:
         names = _model_preset_names(loop)
         return OutboundMessage(
             channel=ctx.msg.channel,
             chat_id=ctx.msg.chat_id,
             content=(
-                f"Could not switch model preset: {_command_error_message(exc)}\n\n"
+                f"Could not switch model: {_command_error_message(exc)}\n\n"
                 f"Available presets: {_format_preset_names(names)}"
             ),
             metadata=metadata,
@@ -369,7 +428,11 @@ async def cmd_model(ctx: CommandContext) -> OutboundMessage:
 
     max_tokens = runtime.generation.max_tokens
     lines = [
-        f"Switched model preset to `{runtime.model_preset}`.",
+        (
+            f"Switched model preset to `{runtime.model_preset}`."
+            if preset_name is not None
+            else f"Switched model to `{runtime.model}`."
+        ),
         "- Scope: current session",
         f"- Model: `{runtime.model}`",
         f"- Context window: {runtime.context_window_tokens}",

@@ -6,7 +6,10 @@ from loguru import logger as default_logger
 
 from nanobot.agent.subagent import SubagentControlError
 from nanobot.providers.base import LLMUsage
-from nanobot.session.model_selection import model_preset_from_metadata
+from nanobot.session.model_selection import (
+    model_preset_from_metadata,
+    model_selection_from_metadata,
+)
 from nanobot.session.recovery import recovery_state_from_metadata
 from nanobot.session.state import SessionState
 from nanobot.session.webui_turns import websocket_turn_id, websocket_turn_wall_started_at
@@ -60,6 +63,8 @@ class WebUISessionProjection:
         except ValueError:
             self._log.warning("ignoring invalid model preset metadata for session_key={}", session_key)
             fields["model_preset"] = None
+        selection = model_selection_from_metadata(metadata)
+        fields["model"] = selection.model if selection is not None else None
         if metadata is None:
             return fields
 

@@ -11,6 +11,7 @@ These commands work inside chat channels and interactive agent sessions:
 | `/status` | Show bot status |
 | `/model` | Show the current model and available model presets |
 | `/model <preset>` | Switch and persist the model preset for the current session |
+| `/model <model-id>` | Switch this session to any model, with no preset required |
 | `/dream` | Run Dream memory consolidation now |
 | `/dream-log` | Show the latest Dream memory change |
 | `/dream-log <sha>` | Show a specific Dream memory change |
@@ -68,7 +69,13 @@ To switch presets for future turns:
 /model default
 ```
 
-Switching changes the model used for future replies in this conversation and keeps that choice for later turns, including after a restart. It does not change other conversations or interrupt a reply already in progress. To add or configure model choices, see [Configuration: Model presets](./configuration.md#model-presets).
+Any model can be used without creating a preset. The provider is detected from the model id, or set explicitly; the context window is optional and is inherited from the active preset when omitted.
+
+```text
+/model anthropic/claude-sonnet-4 --provider anthropic --context 200000
+```
+
+Switching changes the model used for future replies in this conversation and keeps that choice for later turns, including after a restart. It does not change other conversations, the instance default, or interrupt a reply already in progress. To change the instance default, use Settings → Models. To save model plus generation parameters for reuse, see [Configuration: Model presets](./configuration.md#model-presets).
 
 ## Local triggers
 

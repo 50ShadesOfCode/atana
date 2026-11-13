@@ -336,6 +336,8 @@ export interface SessionSummary {
   updatedAt: string | null
   runStartedAt: number | null
   modelPreset: string | null
+  /** Explicit model chosen for this session; overrides the preset. */
+  model?: string | null
   recoveryState?: RecoveryState | null
   workspaceScope?: WorkspaceScopePayload | null
   pinned: boolean

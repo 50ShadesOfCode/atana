@@ -85,8 +85,12 @@ from nanobot.session.history_visibility import HIDDEN_HISTORY_META
 from nanobot.session.manager import SESSION_CACHE_MAX_SIZE, Session, SessionManager, SessionPolicy
 from nanobot.session.message_metadata import input_history_metadata, persisted_message
 from nanobot.session.model_selection import (
+    SESSION_MODEL_METADATA_KEY,
     SESSION_MODEL_PRESET_METADATA_KEY,
+    SessionModelSelection,
     model_preset_from_metadata,
+    model_selection_from_metadata,
+    model_selection_metadata,
 )
 from nanobot.session.recovery import (
     PENDING_FOLLOWUP_ID_KEY,
@@ -547,19 +551,35 @@ class AgentLoop:
         recover_removed: bool,
     ) -> LLMRuntime | None:
         name = model_preset_from_metadata(session.metadata)
-        if name is None:
+        if name is not None:
+            try:
+                return self.runtime_resolver.resolve_preset(name)
+            except KeyError:
+                if not recover_removed or name in self.runtime_resolver.model_presets:
+                    raise
+                logger.warning(
+                    "Session '{}' references removed model preset '{}'; falling back to default",
+                    session.key,
+                    name,
+                )
+                session.metadata.pop(SESSION_MODEL_PRESET_METADATA_KEY, None)
+                return None
+
+        selection = model_selection_from_metadata(session.metadata)
+        if selection is None:
             return self.llm_runtime()
         try:
-            return self.runtime_resolver.resolve_preset(name)
-        except KeyError:
-            if not recover_removed or name in self.runtime_resolver.model_presets:
+            return self.runtime_resolver.resolve_model(selection)
+        except (KeyError, ValueError) as exc:
+            if not recover_removed:
                 raise
             logger.warning(
-                "Session '{}' references removed model preset '{}'; falling back to default",
+                "Session '{}' cannot use model '{}'; falling back to default: {}",
                 session.key,
-                name,
+                selection.model,
+                exc,
             )
-            session.metadata.pop(SESSION_MODEL_PRESET_METADATA_KEY, None)
+            session.metadata.pop(SESSION_MODEL_METADATA_KEY, None)
             return None
 
     async def runtime_for_session(
@@ -575,7 +595,7 @@ class AgentLoop:
         await self.sessions.state.update_metadata(
             session.key,
             {},
-            remove=(SESSION_MODEL_PRESET_METADATA_KEY,),
+            remove=(SESSION_MODEL_PRESET_METADATA_KEY, SESSION_MODEL_METADATA_KEY),
             expected_generation=session.generation,
         )
         return self.llm_runtime()
@@ -591,6 +611,32 @@ class AgentLoop:
             session_key,
             {SESSION_MODEL_PRESET_METADATA_KEY: runtime.model_preset},
             create_if_missing=True,
+            remove=(SESSION_MODEL_METADATA_KEY,),
+        )
+        return runtime
+
+    async def set_session_model(
+        self,
+        session_key: str,
+        model: str,
+        *,
+        provider: str = "auto",
+        context_window_tokens: int | None = None,
+    ) -> LLMRuntime:
+        """Validate and persist one session's explicit model choice."""
+        if not isinstance(model, str) or not model.strip():
+            raise ValueError("model must be a non-empty string")
+        selection = SessionModelSelection(
+            model=model.strip(),
+            provider=provider.strip() or "auto",
+            context_window_tokens=context_window_tokens,
+        )
+        runtime = self.runtime_resolver.resolve_model(selection)
+        await self.sessions.state.update_metadata(
+            session_key,
+            {SESSION_MODEL_METADATA_KEY: model_selection_metadata(selection)},
+            create_if_missing=True,
+            remove=(SESSION_MODEL_PRESET_METADATA_KEY,),
         )
         return runtime
 

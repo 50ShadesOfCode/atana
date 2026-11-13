@@ -220,6 +220,7 @@ export function ModelsSettings({
   onConfigureProvider,
   onManageProviders,
   onSave,
+  onSaveDefaultModel,
   onSaveRequestSettings,
   onMigrate,
   onBeginCreate,
@@ -251,6 +252,7 @@ export function ModelsSettings({
   onConfigureProvider: (provider: string, trigger: HTMLButtonElement | null) => void;
   onManageProviders: (trigger: HTMLButtonElement) => void;
   onSave: () => void;
+  onSaveDefaultModel: (model: string, provider: string, contextWindowTokens?: number) => Promise<boolean>;
   onSaveRequestSettings: (values: Partial<RequestParameterDraft>) => Promise<void>;
   onMigrate: () => void;
   onBeginCreate: () => void;
@@ -698,11 +700,84 @@ export function ModelsSettings({
     </div>
   );
 
+  const [defaultModel, setDefaultModel] = useState(settings.agent.model);
+  const [defaultProvider, setDefaultProvider] = useState(settings.agent.provider || "auto");
+  const [defaultContext, setDefaultContext] = useState(
+    String(settings.agent.context_window_tokens),
+  );
+  useEffect(() => {
+    setDefaultModel(settings.agent.model);
+    setDefaultProvider(settings.agent.provider || "auto");
+    setDefaultContext(String(settings.agent.context_window_tokens));
+  }, [
+    settings.agent.context_window_tokens,
+    settings.agent.model,
+    settings.agent.provider,
+  ]);
+  const saveDefaultModel = () => {
+    const context = Number(defaultContext);
+    void onSaveDefaultModel(
+      defaultModel,
+      defaultProvider,
+      Number.isSafeInteger(context) && context > 0 ? context : undefined,
+    );
+  };
+
   const showMigration = !settings.model_call_order_editable
     && settings.model_configuration_migratable !== false;
 
   return (
     <div className="settings-stack">
+      <section>
+        <SettingsSectionTitle>
+          {tx("settings.models.defaultTitle", "Default model")}
+        </SettingsSectionTitle>
+        <SettingsGroup>
+          <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-end sm:px-5">
+            <label className="flex min-w-0 flex-1 flex-col gap-1 text-[12px] font-medium text-muted-foreground">
+              {tx("settings.models.defaultModel", "Model")}
+              <Input
+                value={defaultModel}
+                onChange={(event) => setDefaultModel(event.target.value)}
+                placeholder={tx("settings.models.defaultModelPlaceholder", "provider/model")}
+                className="font-mono text-[13px]"
+              />
+            </label>
+            <label className="flex w-full flex-col gap-1 text-[12px] font-medium text-muted-foreground sm:w-44">
+              {tx("settings.models.defaultProvider", "Provider")}
+              <select
+                value={defaultProvider}
+                onChange={(event) => setDefaultProvider(event.target.value)}
+                className="h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground"
+              >
+                <option value="auto">{tx("settings.values.auto", "Auto")}</option>
+                {settings.providers.map((provider) => (
+                  <option key={provider.name} value={provider.name}>{provider.label}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex w-full flex-col gap-1 text-[12px] font-medium text-muted-foreground sm:w-36">
+              {tx("settings.models.defaultContext", "Context window")}
+              <Input
+                value={defaultContext}
+                inputMode="numeric"
+                onChange={(event) => setDefaultContext(event.target.value)}
+              />
+            </label>
+            <Button
+              size="sm"
+              className="shrink-0 rounded-full"
+              disabled={saving || !defaultModel.trim() || !defaultProvider.trim()}
+              onClick={saveDefaultModel}
+            >
+              {saving ? (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden />
+              ) : null}
+              {tx("settings.models.saveDefault", "Save")}
+            </Button>
+          </div>
+        </SettingsGroup>
+      </section>
       <section>
         <SettingsSectionTitle>{t("settings.models.presets")}</SettingsSectionTitle>
         {showMigration ? (

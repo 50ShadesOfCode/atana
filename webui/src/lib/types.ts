@@ -500,6 +500,8 @@ export interface ChatSummary {
   preview: string;
   /** Model preset persisted for this session; null means it still follows the global default. */
   modelPreset?: string | null;
+  /** Explicit model chosen for this session; takes precedence over the preset. */
+  model?: string | null;
   /** Unix epoch seconds when this session currently has a turn in flight. */
   runStartedAt?: number | null;
   /** Durable recovery state that needs attention after an interrupted turn. */
