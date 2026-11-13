@@ -343,6 +343,8 @@ class MyTool(Tool):
             return ToolResult.error(f"Error: '{key}' is read-only and cannot be modified")
         if key == "model_preset":
             return await self._modify_model_preset(value)
+        if key == "model":
+            return await self._modify_model(value)
         if key in self.RESTRICTED:
             return self._modify_restricted(key, value)
         if key in RUNTIME_COMMAND_KEYS:
@@ -380,6 +382,30 @@ class MyTool(Tool):
             f"context_window_tokens is now {runtime.context_window_tokens!r}"
         )
 
+    async def _modify_model(self, value: Any) -> str:
+        if not isinstance(value, str) or not value.strip():
+            return ToolResult.error("Error: 'model' must be a non-empty string")
+        model = value.strip()
+        session_key = current_request_session_key()
+        old = self._runtime_control.snapshot().model
+        try:
+            runtime = await self._runtime_control.set_model(model, session_key=session_key)
+        except (KeyError, ValueError) as exc:
+            message = str(exc.args[0]) if exc.args else str(exc)
+            punctuation = "" if message.endswith((".", "!", "?")) else "."
+            return ToolResult.error(f"Error: {message}{punctuation}")
+        if session_key:
+            self._audit("modify", f"model = {model!r}")
+            return (
+                f"Set model = {model!r} for the next turn; "
+                f"context_window_tokens will be {runtime.context_window_tokens!r}"
+            )
+        self._audit("modify", f"model: {old!r} -> {model!r}")
+        return (
+            f"Set model = {model!r} (was {old!r}); "
+            f"context_window_tokens is now {runtime.context_window_tokens!r}"
+        )
+
     def _modify_restricted(self, key: str, value: Any) -> str:
         spec = self.RESTRICTED[key]
         expected = cast(type[Any], spec["type"])
@@ -397,10 +423,10 @@ class MyTool(Tool):
             return ToolResult.error(f"Error: '{key}' must be <= {spec['max']}")
         if "min_len" in spec and len(str(value)) < spec["min_len"]:
             return ToolResult.error(f"Error: '{key}' must be at least {spec['min_len']} characters")
-        if key in {"model", "context_window_tokens"} and current_request_session_key():
+        if key == "context_window_tokens" and current_request_session_key():
             return ToolResult.error(
-                f"Error: direct '{key}' changes are instance-wide and disabled "
-                "during an active session; use a configured model_preset"
+                "Error: direct 'context_window_tokens' changes are instance-wide and disabled "
+                "during an active session; switch models with 'model' or 'model_preset'"
             )
         if key == "model":
             self._runtime_control.set_model(cast(str, value))

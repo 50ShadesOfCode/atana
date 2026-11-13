@@ -339,13 +339,14 @@ def load_provider_snapshot(
     config_path: Path | None = None,
     *,
     preset_name: str | None = None,
+    preset: ModelPresetConfig | None = None,
 ) -> ProviderSnapshot:
     from nanobot.config.loader import load_config, resolve_config_env_vars
 
-    return build_provider_snapshot(
-        resolve_config_env_vars(
-            load_config(config_path),
-            config_path=config_path,
-        ),
-        preset_name=preset_name,
+    config = resolve_config_env_vars(
+        load_config(config_path),
+        config_path=config_path,
     )
+    if preset is not None:
+        return build_isolated_provider_snapshot(config, preset=preset)
+    return build_provider_snapshot(config, preset_name=preset_name)

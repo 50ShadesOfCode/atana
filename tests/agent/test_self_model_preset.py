@@ -11,7 +11,10 @@ from nanobot.agent.tools.self import MyTool
 from nanobot.bus.queue import MessageBus
 from nanobot.config.schema import ModelPresetConfig
 from nanobot.providers.factory import ProviderSnapshot
-from nanobot.session.model_selection import model_preset_from_metadata
+from nanobot.session.model_selection import (
+    model_preset_from_metadata,
+    model_selection_from_metadata,
+)
 
 
 def _provider(default_model: str, max_tokens: int = 123) -> MagicMock:
@@ -23,7 +26,7 @@ def _provider(default_model: str, max_tokens: int = 123) -> MagicMock:
     return provider
 
 
-def _make_loop(tmp_path, presets=None, active_preset=None):
+def _make_loop(tmp_path, presets=None, active_preset=None, preset_snapshot_loader=None):
     provider = _provider("base-model")
     return AgentLoop(
         bus=MessageBus(),
@@ -33,6 +36,7 @@ def _make_loop(tmp_path, presets=None, active_preset=None):
         context_window_tokens=1000,
         model_presets=presets or {},
         model_preset=active_preset,
+        preset_snapshot_loader=preset_snapshot_loader,
     )
 
 
@@ -327,18 +331,7 @@ async def test_self_tool_reports_session_preset_provider_configuration_error(tmp
     assert result == "Error: No API key configured for provider 'openai'."
 
 
-@pytest.mark.parametrize(
-    ("key", "value"),
-    [
-        ("model", "other-model"),
-        ("context_window_tokens", 8_192),
-    ],
-)
-async def test_self_tool_rejects_instance_runtime_changes_in_session(
-    tmp_path,
-    key: str,
-    value: object,
-) -> None:
+async def test_self_tool_rejects_instance_context_changes_in_session(tmp_path) -> None:
     loop = _make_loop(tmp_path)
     tool = _my_tool(loop)
     session = loop.sessions.get_or_create("cli:one")
@@ -349,13 +342,43 @@ async def test_self_tool_rejects_instance_runtime_changes_in_session(
         session_key=session.key,
         runtime=(await loop.runtime_for_session(session)),
     )):
-        result = await tool._modify(key, value)
+        result = await tool._modify("context_window_tokens", 8_192)
 
     other_runtime = (await loop.runtime_for_session(loop.sessions.get_or_create("cli:two")))
     assert "instance-wide and disabled" in result
-    assert "model_preset" in result
     assert other_runtime.model == "base-model"
     assert other_runtime.context_window_tokens == 1000
+
+
+async def test_self_tool_sets_session_model_without_touching_other_sessions(tmp_path) -> None:
+    def loader(target):
+        preset = target if isinstance(target, ModelPresetConfig) else loop.model_presets[target]
+        return ProviderSnapshot(
+            provider=_provider(preset.model),
+            model=preset.model,
+            context_window_tokens=preset.context_window_tokens,
+            signature=("test", preset.model, preset.provider),
+            generation=preset.to_generation_settings(),
+            model_preset=None if isinstance(target, ModelPresetConfig) else target,
+        )
+
+    loop = _make_loop(tmp_path, preset_snapshot_loader=loader)
+    tool = _my_tool(loop)
+    session = loop.sessions.get_or_create("cli:one")
+
+    with request_context(RequestContext(
+        channel="cli",
+        chat_id="one",
+        session_key=session.key,
+        runtime=(await loop.runtime_for_session(session)),
+    )):
+        result = await tool._modify("model", "openai/gpt-4.1")
+
+    assert "for the next turn" in result
+    stored = loop.sessions.get_or_create("cli:one")
+    assert model_selection_from_metadata(stored.metadata).model == "openai/gpt-4.1"
+    other = await loop.runtime_for_session(loop.sessions.get_or_create("cli:two"))
+    assert other.model == "base-model"
 
 
 async def test_self_tool_set_model_clears_active_preset(tmp_path) -> None:

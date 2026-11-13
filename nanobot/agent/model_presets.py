@@ -6,9 +6,17 @@ from pathlib import Path
 
 from nanobot.config.schema import Config, ModelPresetConfig
 from nanobot.providers.base import LLMProvider
-from nanobot.providers.factory import ProviderSnapshot, build_provider_snapshot
+from nanobot.providers.factory import (
+    ProviderSnapshot,
+    build_isolated_provider_snapshot,
+    build_provider_snapshot,
+)
+from nanobot.session.model_selection import SessionModelSelection
+from nanobot.utils.llm_runtime import LLMRuntime
 
-PresetSnapshotLoader = Callable[[str], ProviderSnapshot]
+# A preset can be addressed by name or handed over directly for an ad-hoc model choice.
+PresetTarget = str | ModelPresetConfig
+PresetSnapshotLoader = Callable[[PresetTarget], ProviderSnapshot]
 PresetCatalogLoader = Callable[[], Mapping[str, ModelPresetConfig]]
 
 
@@ -42,8 +50,18 @@ def make_preset_snapshot_loader(
     provider_snapshot_loader: Callable[..., ProviderSnapshot] | None,
 ) -> PresetSnapshotLoader:
     if provider_snapshot_loader is not None:
-        return lambda name: provider_snapshot_loader(preset_name=name)
-    return lambda name: build_provider_snapshot(config, preset_name=name)
+        def load(target: PresetTarget) -> ProviderSnapshot:
+            if isinstance(target, str):
+                return provider_snapshot_loader(preset_name=target)
+            return provider_snapshot_loader(preset=target)
+        return load
+
+    def build(target: PresetTarget) -> ProviderSnapshot:
+        if isinstance(target, str):
+            return build_provider_snapshot(config, preset_name=target)
+        return build_isolated_provider_snapshot(config, preset=target)
+
+    return build
 
 
 def build_static_preset_snapshot(
@@ -71,6 +89,18 @@ def build_runtime_preset_snapshot(
     if loader is not None:
         return replace(loader(name), model_preset=name)
     return build_static_preset_snapshot(provider, name, presets[name])
+
+
+def model_selection_preset(base: LLMRuntime, selection: SessionModelSelection) -> ModelPresetConfig:
+    """Build a preset for an ad-hoc model; generation parameters come from the base runtime."""
+    return ModelPresetConfig(
+        model=selection.model,
+        provider=selection.provider,
+        max_tokens=base.generation.max_tokens,
+        context_window_tokens=selection.context_window_tokens or base.context_window_tokens,
+        temperature=base.generation.temperature,
+        reasoning_effort=base.generation.reasoning_effort,
+    )
 
 
 def normalize_preset_name(name: str | None, presets: dict[str, ModelPresetConfig]) -> str:

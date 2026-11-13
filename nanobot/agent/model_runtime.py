@@ -20,6 +20,7 @@ from nanobot.providers.factory import (
     validate_provider_setup,
 )
 from nanobot.providers.request_overrides import isolate_request_overrides
+from nanobot.session.model_selection import SessionModelSelection
 from nanobot.utils.llm_runtime import LLMRuntime, runtime_from_provider_snapshot
 
 
@@ -94,6 +95,7 @@ class ModelRuntimeResolver:
         self._preset_snapshot_loader = preset_snapshot_loader
         self._refresh_required = False
         self._resolved_presets: dict[str, LLMRuntime] = {}
+        self._resolved_models: dict[tuple[object, ...], LLMRuntime] = {}
         self._recent_override: _RecentOverride | None = None
         self._tracks_provider_generation = initial_runtime.model_preset is None
         self._default_selection_signature = preset_helpers.default_selection_signature(
@@ -141,6 +143,7 @@ class ModelRuntimeResolver:
         self._refresh_required = True
         self._preset_catalog_refresh_required = True
         self._resolved_presets.clear()
+        self._resolved_models.clear()
         self._recent_override = None
 
     def _refresh_preset_catalog(self) -> None:
@@ -199,6 +202,27 @@ class ModelRuntimeResolver:
         self._resolved_presets[normalized] = runtime
         return runtime
 
+    def resolve_model(self, selection: SessionModelSelection) -> LLMRuntime:
+        """Resolve an explicit model choice without changing the selected default."""
+        preset = preset_helpers.model_selection_preset(self._runtime, selection)
+        key = (
+            preset.model,
+            preset.provider,
+            preset.context_window_tokens,
+            preset.max_tokens,
+            preset.temperature,
+            preset.reasoning_effort,
+            self._runtime.snapshot_signature,
+        )
+        cached = self._resolved_models.get(key)
+        if cached is not None:
+            return cached
+        if self._preset_snapshot_loader is None:
+            raise ValueError("model selection requires a provider snapshot loader")
+        runtime = self.resolve_snapshot(self._preset_snapshot_loader(preset))
+        self._resolved_models[key] = runtime
+        return runtime
+
     def select_preset(self, name: str | None) -> LLMRuntime:
         """Select a named preset as the default for future turns."""
         runtime = self.resolve_preset(name)
@@ -255,6 +279,7 @@ class ModelRuntimeResolver:
             return None
 
         self._resolved_presets.clear()
+        self._resolved_models.clear()
         snapshot = self._provider_snapshot_loader()
         default_selection = preset_helpers.default_selection_signature(
             snapshot.signature,

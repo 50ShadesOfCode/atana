@@ -16,10 +16,13 @@ from nanobot.command.builtin import cmd_model
 from nanobot.command.router import CommandContext, CommandExpansion, CommandInput, CommandRouter
 from nanobot.config.schema import ModelPresetConfig
 from nanobot.goal.command import cmd_goal, register_goal_command
+from nanobot.providers.factory import ProviderSnapshot
 from nanobot.session.history_visibility import HIDDEN_HISTORY_META
 from nanobot.session.model_selection import (
+    SESSION_MODEL_METADATA_KEY,
     SESSION_MODEL_PRESET_METADATA_KEY,
     model_preset_from_metadata,
+    model_selection_from_metadata,
 )
 
 
@@ -147,7 +150,7 @@ async def test_model_command_unknown_preset_keeps_old_state(tmp_path) -> None:
 
     out = await cmd_model(_ctx(loop, "/model missing", args="missing"))
 
-    assert "Could not switch model preset" in out.content
+    assert "Could not switch model" in out.content
     assert "\"model_preset" not in out.content
     assert "Available presets: `default`, `fast`" in out.content
     assert loop.model_preset is None
@@ -167,7 +170,7 @@ async def test_model_command_reports_provider_configuration_errors(tmp_path) -> 
     loop.sessions.save(session)
     status = await cmd_model(_ctx(loop, "/model"))
 
-    assert "Could not switch model preset" in switched.content
+    assert "Could not switch model" in switched.content
     assert "No API key configured for provider 'openai'." in switched.content
     assert "Current selection error" in status.content
     assert "No API key configured for provider 'openai'." in status.content
@@ -232,10 +235,10 @@ def test_model_command_in_help_and_palette() -> None:
     palette = builtin_command_palette()
 
     model = next(item for item in palette if item["command"] == "/model")
-    assert model["arg_hint"] == "[preset]"
+    assert model["arg_hint"] == "[preset|model]"
     assert model["lifecycle"] == "side_channel"
     assert model["accepts_args"] is True
-    assert "/model [preset]" in build_help_text()
+    assert "/model [preset|model]" in build_help_text()
 
 
 @pytest.mark.asyncio
@@ -393,3 +396,72 @@ def test_goal_command_in_help_and_palette() -> None:
     goal_index = commands.index("/goal")
     assert commands[goal_index - 1:goal_index + 2] == ["/history", "/goal", "/trigger"]
     assert "/goal <goal>" in build_help_text()
+
+
+def _selection_loader(target):
+    preset = target if isinstance(target, ModelPresetConfig) else ModelPresetConfig(model=target)
+    return ProviderSnapshot(
+        provider=_provider(preset.model),
+        model=preset.model,
+        context_window_tokens=preset.context_window_tokens,
+        signature=("selection", preset.model),
+        generation=preset.to_generation_settings(),
+        model_preset=None if isinstance(target, ModelPresetConfig) else target,
+    )
+
+
+@pytest.mark.asyncio
+async def test_model_command_switches_to_an_explicit_model(tmp_path) -> None:
+    loop = _make_loop(tmp_path, preset_snapshot_loader=_selection_loader)
+
+    out = await cmd_model(
+        _ctx(
+            loop,
+            "/model openai/gpt-4.1 --provider openai --context 32000",
+            args="openai/gpt-4.1 --provider openai --context 32000",
+        ),
+    )
+
+    assert out.content == "\n".join([
+        "Switched model to `openai/gpt-4.1`.",
+        "- Scope: current session",
+        "- Model: `openai/gpt-4.1`",
+        "- Context window: 32000",
+        "- Max output tokens: 123",
+    ])
+    selection = model_selection_from_metadata(
+        loop.sessions.get_or_create("cli:direct").metadata,
+    )
+    assert selection is not None
+    assert selection.model == "openai/gpt-4.1"
+    assert selection.provider == "openai"
+    assert selection.context_window_tokens == 32_000
+    assert _saved_model_preset(loop) is None
+
+
+@pytest.mark.asyncio
+async def test_model_command_model_selection_replaces_the_preset(tmp_path) -> None:
+    loop = _make_loop(tmp_path, preset_snapshot_loader=_selection_loader)
+    await cmd_model(_ctx(loop, "/model fast", args="fast"))
+
+    await cmd_model(_ctx(loop, "/model openai/gpt-4.1", args="openai/gpt-4.1"))
+
+    session = loop.sessions.get_or_create("cli:direct")
+    assert model_preset_from_metadata(session.metadata) is None
+    assert model_selection_from_metadata(session.metadata) == model_selection_from_metadata(
+        {SESSION_MODEL_METADATA_KEY: {"model": "openai/gpt-4.1", "provider": "auto"}},
+    )
+
+
+@pytest.mark.asyncio
+async def test_model_command_rejects_a_bad_context_window(tmp_path) -> None:
+    loop = _make_loop(tmp_path, preset_snapshot_loader=_selection_loader)
+
+    out = await cmd_model(
+        _ctx(loop, "/model gpt-4.1 --context nope", args="gpt-4.1 --context nope"),
+    )
+
+    assert "context window must be an integer" in out.content
+    assert model_selection_from_metadata(
+        loop.sessions.get_or_create("cli:direct").metadata,
+    ) is None
