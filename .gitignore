@@ -94,3 +94,7 @@ webui/.verify-*
 nanobot/_build_commit.txt
 
 nanobot/skills/nanobot-document/references/
+
+.trail/
+.ua/
+opencode.json
