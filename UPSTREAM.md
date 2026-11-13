@@ -21,6 +21,10 @@ git merge main
 
 `dev` is long-lived and pushed, so it is merged, never rebased.
 
+## Pushing
+
+Push over SSH (`origin` is `git@github.com:50ShadesOfCode/atana.git`). The `gh` OAuth token has no `workflow` scope, so an HTTPS push that touches `.github/workflows/*` is rejected by GitHub; SSH keys are not subject to that restriction. The first push of the full history is roughly 80 MB, which a single HTTPS request fails with a 408 — SSH handles it, in about 15 minutes.
+
 ## Keeping merges cheap
 
 - Prefer new files and narrow seams over rewriting upstream files. Every edited upstream file is a future conflict.
