@@ -35,7 +35,23 @@ Push over SSH (`origin` is `git@github.com:50ShadesOfCode/atana.git`). The `gh` 
 
 ## Touched upstream files
 
-Filled in as fork work lands.
+### Model selection (ad-hoc models, session and default)
+
+- `nanobot/agent/loop.py` — session runtime resolution, `set_session_model`
+- `nanobot/agent/model_presets.py` — preset loader accepts a preset object, ad-hoc preset builder
+- `nanobot/agent/model_runtime.py` — `resolve_model` and its cache
+- `nanobot/agent/tools/runtime_control.py`, `nanobot/agent/tools/self.py` — session-scoped `model` writes
+- `nanobot/command/builtin.py` — `/model <model-id> [--provider] [--context]`
+- `nanobot/providers/factory.py` — `load_provider_snapshot(preset=...)`
+- `nanobot/session/model_selection.py` — `_nanobot_model` metadata
+- `nanobot/webui/session_projection.py`, `nanobot/webui/session_list_index.py` — expose `model`
+- `webui/src/lib/{api,types,reload-cache}.ts`, `webui/src/hooks/useSessions.ts` — model on the session summary
+- `webui/src/components/thread/{ModelPresetBadge,ThreadComposer,ThreadShell,model-preset}.tsx` — model browser in the composer
+- `webui/src/components/settings/**` — editable default model
+- `tui/src/{app/app,client/api,client/types}.ts` — show a session model
+- `docs/{chat-commands,my-tool}.md`
+
+Fork-only files (no upstream counterpart): `webui/src/components/thread/useModelCatalog.ts`, `tests/agent/test_session_model_selection.py`, `tests/session/test_model_selection_metadata.py`.
 
 ## Releases
 
