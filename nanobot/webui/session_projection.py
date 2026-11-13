@@ -65,6 +65,7 @@ class WebUISessionProjection:
             fields["model_preset"] = None
         selection = model_selection_from_metadata(metadata)
         fields["model"] = selection.model if selection is not None else None
+        fields["model_provider"] = selection.provider if selection is not None else None
         if metadata is None:
             return fields
 

@@ -44,6 +44,7 @@ def list_webui_sessions(
                 if (selection := model_selection_from_metadata(metadata)) is not None
                 else None
             ),
+            "model_provider": selection.provider if selection is not None else None,
             "recovery_state": recovery_state_from_metadata(metadata),
             **_indexed_workspace_scope_fields(metadata), "path": row["path"],
         })

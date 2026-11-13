@@ -502,6 +502,8 @@ export interface ChatSummary {
   modelPreset?: string | null;
   /** Explicit model chosen for this session; takes precedence over the preset. */
   model?: string | null;
+  /** Provider of the explicit model; never inferred from the model name. */
+  modelProvider?: string | null;
   /** Unix epoch seconds when this session currently has a turn in flight. */
   runStartedAt?: number | null;
   /** Durable recovery state that needs attention after an interrupted turn. */

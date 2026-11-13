@@ -136,6 +136,7 @@ export function useSessions(): {
         preview: "",
         modelPreset: modelPreset ?? null,
         model: null,
+        modelProvider: null,
         workspaceScope: workspaceScope ?? null,
         projectLocked: false,
       },

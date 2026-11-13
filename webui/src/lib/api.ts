@@ -205,6 +205,7 @@ export async function listSessions(
     preview?: string;
     model_preset?: string | null;
     model?: string | null;
+    model_provider?: string | null;
     run_started_at?: number | null;
     recovery_state?: RecoveryState | null;
     workspace_scope?: WorkspaceScopePayload | null;
@@ -228,6 +229,7 @@ export async function listSessions(
       preview: s.preview ?? "",
       modelPreset: s.model_preset ?? null,
       model: s.model ?? null,
+      modelProvider: s.model_provider ?? null,
       runStartedAt: s.run_started_at ?? null,
       recoveryState: s.recovery_state ?? null,
       workspaceScope: s.workspace_scope ?? null,

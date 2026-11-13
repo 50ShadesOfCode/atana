@@ -40,6 +40,7 @@ export function toModelBadgeInfo(
   settings: SettingsPayload | null,
   modelPreset: string | null = null,
   sessionModel: string | null = null,
+  sessionProvider: string | null = null,
 ): ModelBadgeInfo {
   const scopedPreset = modelPreset?.trim() || null;
   const explicitModel = sessionModel?.trim() || null;
@@ -55,7 +56,7 @@ export function toModelBadgeInfo(
         : preset.name.trim()
       : scopedPreset || compactModelName(model);
   const rawProvider = explicitModel
-    ? inferProviderFromModelName(explicitModel)
+    ? sessionProvider?.trim() || inferProviderFromModelName(explicitModel)
     : preset?.provider
       || (!scopedPreset ? settings?.agent.provider : null)
       || null;
@@ -67,9 +68,13 @@ export function toModelBadgeInfo(
   const providerRow = provider
     ? settings?.providers?.find((item) => item.name === provider)
     : null;
+  // A stored model was validated by the server when it was selected; only an
+  // unresolved provider or an unconfigured one still needs setup.
   const needsSetup = Boolean(
-    settings && (!model || !provider || !providerRow || !providerRow.configured),
-  );
+    settings
+    && !explicitModel
+    && (!model || !provider || !providerRow || !providerRow.configured),
+  ) || Boolean(settings && explicitModel && (!model || !provider));
   return {
     label,
     model: compactModelName(model),

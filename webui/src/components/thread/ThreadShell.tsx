@@ -857,13 +857,17 @@ export function ThreadShell({
   const wasShowingHeroComposerRef = useRef(showHeroComposer);
   const sessionModelPreset = session?.modelPreset?.trim() || null;
   const sessionModel = session?.model?.trim() || null;
+  const sessionModelProvider = session?.modelProvider?.trim() || null;
   const [localModelPreset, setLocalModelPreset] = useState<string | null>(null);
   const [localModel, setLocalModel] = useState<string | null>(null);
+  const [localModelProvider, setLocalModelProvider] = useState<string | null>(null);
   useEffect(() => {
     setLocalModelPreset(null);
     setLocalModel(null);
-  }, [session?.key, sessionModelPreset, sessionModel]);
+    setLocalModelProvider(null);
+  }, [session?.key, sessionModelPreset, sessionModel, sessionModelProvider]);
   const explicitModel = localModel ?? sessionModel;
+  const explicitModelProvider = localModelProvider ?? sessionModelProvider;
   const configuredPresetNames = useMemo(
     () => new Set(settings?.model_presets.map((preset) => preset.name) ?? []),
     [settings],
@@ -909,12 +913,14 @@ export function ThreadShell({
   const handleModelPresetChange = useCallback((name: string) => {
     setLocalModelPreset(name);
     setLocalModel(null);
+    setLocalModelProvider(null);
     if (chatId) {
       void client.sendSystemCommand(chatId, `/model ${name}`).catch(() => {});
     }
   }, [chatId, client]);
   const handleModelChange = useCallback((model: string, provider: string, contextWindow?: number) => {
     setLocalModel(model);
+    setLocalModelProvider(provider || null);
     setLocalModelPreset(null);
     if (!chatId) return;
     const parts = [`/model ${model}`];
@@ -934,8 +940,14 @@ export function ThreadShell({
     [slashCommands, temporary],
   );
   const modelBadge = useMemo(
-    () => toModelBadgeInfo(modelName, settings, activeModelPreset, explicitModel),
-    [activeModelPreset, explicitModel, modelName, settings],
+    () => toModelBadgeInfo(
+      modelName,
+      settings,
+      activeModelPreset,
+      explicitModel,
+      explicitModelProvider,
+    ),
+    [activeModelPreset, explicitModel, explicitModelProvider, modelName, settings],
   );
   const modelBadgeLabel = modelBadge.needsSetup
     ? t("thread.composer.chooseAI", { defaultValue: "Choose your AI" })
