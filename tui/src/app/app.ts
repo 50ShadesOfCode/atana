@@ -1707,6 +1707,11 @@ export class NanobotTui {
   }
 
   private applySessionModel(session: SessionSummary): void {
+    if (session.model) {
+      this.sessionModelPreset = null
+      this.setTurnModel(session.model)
+      return
+    }
     this.applyModelPreset(session.modelPreset)
   }
 
