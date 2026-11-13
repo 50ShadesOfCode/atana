@@ -86,12 +86,23 @@ export interface ModelPresetOption {
   provider?: string | null;
 }
 
+export interface ModelCatalogOption {
+  provider: string;
+  providerLabel: string;
+  id: string;
+  label?: string;
+  contextWindow?: number;
+}
+
 interface ModelPresetBadgeProps {
   label: string;
   modelDetail?: string | null;
   modelPreset?: string | null;
   modelPresets?: ModelPresetOption[];
   onPresetChange?: (name: string) => void;
+  catalogModels?: ModelCatalogOption[];
+  currentModel?: string | null;
+  onModelChange?: (model: string, provider: string, contextWindow?: number) => void;
   onManageModels?: () => void;
   onRequestComposerFocus?: () => void;
   provider?: string | null;
@@ -108,6 +119,9 @@ export function ModelPresetBadge({
   modelPreset,
   modelPresets = [],
   onPresetChange,
+  catalogModels = [],
+  currentModel,
+  onModelChange,
   onManageModels,
   onRequestComposerFocus,
   provider,
@@ -121,11 +135,18 @@ export function ModelPresetBadge({
   const [open, setOpen] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [motion, setMotion] = useState<PresetMotion | null>(null);
+  const [modelQuery, setModelQuery] = useState("");
   const [motionWidth, setMotionWidth] = useState<number | null>(null);
   const gestureRef = useRef<PresetGesture | null>(null);
   const suppressClickRef = useRef(false);
   const activeName = modelPreset?.trim() || "";
   const listedIndex = modelPresets.findIndex((preset) => preset.name === activeName);
+  const normalizedQuery = modelQuery.trim().toLowerCase();
+  const filteredCatalog = catalogModels
+    .filter((entry) => !normalizedQuery
+      || entry.id.toLowerCase().includes(normalizedQuery)
+      || (entry.label ?? "").toLowerCase().includes(normalizedQuery))
+    .slice(0, 200);
   const activePreset: ModelPresetOption = {
     ...(listedIndex >= 0 ? modelPresets[listedIndex] : undefined),
     name: activeName,
@@ -418,6 +439,18 @@ export function ModelPresetBadge({
           "origin-[var(--radix-popover-content-transform-origin)] p-1.5 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-bottom-1 data-[state=open]:slide-in-from-bottom-1 duration-200 ease-out motion-reduce:animate-none",
         )}
       >
+        {onModelChange ? (
+          <div className="px-1 pb-1">
+            <input
+              type="search"
+              value={modelQuery}
+              onChange={(event) => setModelQuery(event.target.value)}
+              placeholder={t("thread.composer.searchModels", { defaultValue: "Search models" })}
+              aria-label={t("thread.composer.searchModels", { defaultValue: "Search models" })}
+              className="h-8 w-full rounded-lg border border-border/60 bg-background/60 px-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring"
+            />
+          </div>
+        ) : null}
         <div
           role="listbox"
           aria-label={switchModelLabel}
@@ -434,6 +467,46 @@ export function ModelPresetBadge({
           }}
           className="max-h-[min(16rem,var(--radix-popover-content-available-height))] overflow-y-auto py-1 scrollbar-thin scrollbar-track-transparent"
         >
+          {filteredCatalog.length ? (
+            <div className="px-2.5 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              {t("thread.composer.allModels", { defaultValue: "All models" })}
+            </div>
+          ) : null}
+          {filteredCatalog.map((entry, index) => (
+            <ModelOption
+              key={`${entry.provider}:${entry.id}`}
+              entry={entry}
+              selected={entry.id === currentModel}
+              showProvider={index === 0 || filteredCatalog[index - 1].provider !== entry.provider}
+              onSelect={() => {
+                onModelChange?.(entry.id, entry.provider, entry.contextWindow);
+                setOpen(false);
+                setModelQuery("");
+              }}
+            />
+          ))}
+          {modelQuery.trim() && !filteredCatalog.length && onModelChange ? (
+            <button
+              type="button"
+              role="option"
+              aria-selected={false}
+              onClick={() => {
+                onModelChange(modelQuery.trim(), "", undefined);
+                setOpen(false);
+                setModelQuery("");
+              }}
+              className={cn(
+                floatingItemClassName,
+                floatingItemFocusClassName,
+                "flex min-h-9 w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm",
+              )}
+            >
+              {t("thread.composer.useModelId", {
+                defaultValue: 'Use "{{model}}"',
+                model: modelQuery.trim(),
+              })}
+            </button>
+          ) : null}
           {pickerPresets.map((preset) => (
             <PresetOption
               key={preset.name}
@@ -516,6 +589,55 @@ function PresetOption({
       </span>
       {selected ? <Check className="h-4 w-4 shrink-0 text-foreground/80" aria-hidden /> : null}
     </button>
+  );
+}
+
+function ModelOption({
+  entry,
+  selected,
+  showProvider,
+  onSelect,
+}: {
+  entry: ModelCatalogOption;
+  selected: boolean;
+  showProvider: boolean;
+  onSelect: () => void;
+}) {
+  const label = entry.label?.trim() || entry.id;
+  return (
+    <>
+      {showProvider ? (
+        <div className="px-2.5 pb-0.5 pt-1.5 text-[11px] font-medium text-muted-foreground">
+          {entry.providerLabel || entry.provider}
+        </div>
+      ) : null}
+      <button
+        type="button"
+        role="option"
+        aria-label={entry.id}
+        aria-selected={selected}
+        onClick={onSelect}
+        className={cn(
+          floatingItemClassName,
+          floatingItemFocusClassName,
+          "flex min-h-9 w-full cursor-pointer items-center gap-2.5 px-2.5 py-1.5 text-left hover:bg-muted/55 max-sm:min-h-11",
+          selected && "bg-muted/55 text-foreground",
+        )}
+      >
+        <span className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <span className="truncate text-[13px] font-medium text-foreground">{label}</span>
+          {label !== entry.id ? (
+            <span className="truncate text-[12px] text-muted-foreground">{entry.id}</span>
+          ) : null}
+        </span>
+        {entry.contextWindow ? (
+          <span className="shrink-0 text-[11px] text-muted-foreground">
+            {formatModelContextWindow(entry.contextWindow)}
+          </span>
+        ) : null}
+        {selected ? <Check className="h-4 w-4 shrink-0 text-foreground/80" aria-hidden /> : null}
+      </button>
+    </>
   );
 }
 

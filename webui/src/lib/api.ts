@@ -204,6 +204,7 @@ export async function listSessions(
     title?: string;
     preview?: string;
     model_preset?: string | null;
+    model?: string | null;
     run_started_at?: number | null;
     recovery_state?: RecoveryState | null;
     workspace_scope?: WorkspaceScopePayload | null;
@@ -226,6 +227,7 @@ export async function listSessions(
       title: s.title ?? "",
       preview: s.preview ?? "",
       modelPreset: s.model_preset ?? null,
+      model: s.model ?? null,
       runStartedAt: s.run_started_at ?? null,
       recoveryState: s.recovery_state ?? null,
       workspaceScope: s.workspace_scope ?? null,
@@ -1442,6 +1444,25 @@ function modelGenerationSettingsPayload(
     if (configuration[key] !== undefined) payload[field] = configuration[key];
   }
   return payload;
+}
+
+export async function updateAgentModel(
+  transport: WebUIMutationTransport,
+  update: { model: string; provider: string; contextWindowTokens?: number },
+): Promise<Omit<SettingsPayload, "usage"> & Partial<Pick<SettingsPayload, "usage">>> {
+  return mutation<Omit<SettingsPayload, "usage">>(
+    transport,
+    "settings.agent.update",
+    {
+      model: update.model,
+      provider: update.provider,
+      // An explicit default replaces the active preset; otherwise the preset keeps winning.
+      model_preset: "",
+      ...(update.contextWindowTokens
+        ? { context_window_tokens: update.contextWindowTokens }
+        : {}),
+    },
+  );
 }
 
 export async function createModelConfiguration(

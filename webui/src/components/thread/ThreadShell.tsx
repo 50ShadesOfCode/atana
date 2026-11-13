@@ -32,6 +32,7 @@ import {
   modelPresetOptionsFromSettings,
   toModelBadgeInfo,
 } from "@/components/thread/model-preset";
+import { useModelCatalog } from "@/components/thread/useModelCatalog";
 import { ThreadHeader } from "@/components/thread/ThreadHeader";
 import { ThreadLoadingSkeleton } from "@/components/thread/ThreadLoadingSkeleton";
 import { StreamErrorNotice } from "@/components/thread/StreamErrorNotice";
@@ -855,10 +856,14 @@ export function ThreadShell({
   const projectLocked = !!session && session.projectLocked !== false;
   const wasShowingHeroComposerRef = useRef(showHeroComposer);
   const sessionModelPreset = session?.modelPreset?.trim() || null;
+  const sessionModel = session?.model?.trim() || null;
   const [localModelPreset, setLocalModelPreset] = useState<string | null>(null);
+  const [localModel, setLocalModel] = useState<string | null>(null);
   useEffect(() => {
     setLocalModelPreset(null);
-  }, [session?.key, sessionModelPreset]);
+    setLocalModel(null);
+  }, [session?.key, sessionModelPreset, sessionModel]);
+  const explicitModel = localModel ?? sessionModel;
   const configuredPresetNames = useMemo(
     () => new Set(settings?.model_presets.map((preset) => preset.name) ?? []),
     [settings],
@@ -870,8 +875,9 @@ export function ThreadShell({
     || (sessionModelPreset && (!settings || configuredPresetNames.has(sessionModelPreset))
       ? sessionModelPreset
       : null)
-    || settings?.agent.model_preset
-    || "default"
+    || (explicitModel ? "" : settings?.agent.model_preset)
+    || (explicitModel ? "" : "default")
+    || ""
   );
   useEffect(() => {
     setModelFallback(null);
@@ -902,10 +908,21 @@ export function ThreadShell({
   }, [activeModelPreset, chatId, client]);
   const handleModelPresetChange = useCallback((name: string) => {
     setLocalModelPreset(name);
+    setLocalModel(null);
     if (chatId) {
       void client.sendSystemCommand(chatId, `/model ${name}`).catch(() => {});
     }
   }, [chatId, client]);
+  const handleModelChange = useCallback((model: string, provider: string, contextWindow?: number) => {
+    setLocalModel(model);
+    setLocalModelPreset(null);
+    if (!chatId) return;
+    const parts = [`/model ${model}`];
+    if (provider) parts.push(`--provider ${provider}`);
+    if (contextWindow) parts.push(`--context ${contextWindow}`);
+    void client.sendSystemCommand(chatId, parts.join(" ")).catch(() => {});
+  }, [chatId, client]);
+  const { models: catalogModels } = useModelCatalog(settings, getToken, Boolean(chatId));
   const modelPresetOptions = useMemo(
     () => modelPresetOptionsFromSettings(settings),
     [settings],
@@ -917,8 +934,8 @@ export function ThreadShell({
     [slashCommands, temporary],
   );
   const modelBadge = useMemo(
-    () => toModelBadgeInfo(modelName, settings, activeModelPreset),
-    [activeModelPreset, modelName, settings],
+    () => toModelBadgeInfo(modelName, settings, activeModelPreset, explicitModel),
+    [activeModelPreset, explicitModel, modelName, settings],
   );
   const modelBadgeLabel = modelBadge.needsSetup
     ? t("thread.composer.chooseAI", { defaultValue: "Choose your AI" })
@@ -1398,6 +1415,9 @@ export function ThreadShell({
           modelPreset={activeModelPreset}
           modelPresets={modelPresetOptions}
           onModelPresetChange={handleModelPresetChange}
+          catalogModels={catalogModels}
+          currentModel={explicitModel}
+          onModelChange={handleModelChange}
           modelProvider={modelBadge.provider}
           modelProviderLabel={modelBadge.providerLabel}
           modelNeedsSetup={modelBadge.needsSetup}
@@ -1452,6 +1472,9 @@ export function ThreadShell({
           modelPreset={activeModelPreset}
           modelPresets={modelPresetOptions}
           onModelPresetChange={handleModelPresetChange}
+          catalogModels={catalogModels}
+          currentModel={explicitModel}
+          onModelChange={handleModelChange}
           modelProvider={modelBadge.provider}
           modelProviderLabel={modelBadge.providerLabel}
           modelNeedsSetup={modelBadge.needsSetup}

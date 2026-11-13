@@ -315,6 +315,7 @@ export function SettingsPage({
                 setProviderPanel({ kind: "manage" });
               }}
               onSave={modelActions.saveModelSettings}
+              onSaveDefaultModel={modelActions.saveDefaultModel}
               onSaveRequestSettings={modelActions.saveModelRequestSettings}
               onMigrate={modelActions.handleMigrateModelConfigurations}
               onBeginCreate={modelActions.beginModelPresetCreation}

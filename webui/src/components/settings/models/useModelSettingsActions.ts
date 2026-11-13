@@ -28,6 +28,7 @@ import {
   logoutProviderOAuth,
   migrateModelConfigurations,
   updateModelCallOrder,
+  updateAgentModel,
   updateModelConfiguration,
   updateProviderSettings,
 } from "@/lib/api";
@@ -633,6 +634,38 @@ export function useModelSettingsActions({
     });
   };
 
+  const saveDefaultModel = useCallback(async (
+    model: string,
+    provider: string,
+    contextWindowTokens?: number,
+  ): Promise<boolean> => {
+    if (!model.trim() || !provider.trim()) {
+      setError(t("settings.models.defaultModelRequired", {
+        defaultValue: "Model and provider are required.",
+      }));
+      return false;
+    }
+    setSaving(true);
+    try {
+      const payload = await updateAgentModel(client, {
+        model: model.trim(),
+        provider: provider.trim(),
+        contextWindowTokens,
+      });
+      applyPayload(
+        { ...payload, usage: payload.usage ?? settings?.usage },
+        { preserveAgentForm: true, preserveCapabilityForms: true },
+      );
+      setError(null);
+      return true;
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }, [applyPayload, client, setError, setSaving, settings, t]);
+
   return {
     modelEditIdentity: String(editTarget.identity),
     beginModelPresetCreation,
@@ -644,6 +677,7 @@ export function useModelSettingsActions({
     handleMigrateModelConfigurations,
     resetProviderDraft,
     runProviderOAuth,
+    saveDefaultModel,
     saveModelSettings,
     saveModelRequestSettings,
     saveProvider,

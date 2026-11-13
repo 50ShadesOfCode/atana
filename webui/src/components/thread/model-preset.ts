@@ -39,20 +39,26 @@ export function toModelBadgeInfo(
   modelName: string | null,
   settings: SettingsPayload | null,
   modelPreset: string | null = null,
+  sessionModel: string | null = null,
 ): ModelBadgeInfo {
   const scopedPreset = modelPreset?.trim() || null;
+  const explicitModel = sessionModel?.trim() || null;
   const preset = modelPresetForBadge(settings, scopedPreset);
-  const model = scopedPreset
+  const model = explicitModel || (scopedPreset
     ? preset?.model || null
-    : settings?.agent.model || modelName || null;
-  const label = preset
-    ? preset.is_default
-      ? preset.label?.trim() || "Default"
-      : preset.name.trim()
-    : scopedPreset || compactModelName(model);
-  const rawProvider = preset?.provider
-    || (!scopedPreset ? settings?.agent.provider : null)
-    || null;
+    : settings?.agent.model || modelName || null);
+  const label = explicitModel
+    ? compactModelName(explicitModel)
+    : preset
+      ? preset.is_default
+        ? preset.label?.trim() || "Default"
+        : preset.name.trim()
+      : scopedPreset || compactModelName(model);
+  const rawProvider = explicitModel
+    ? inferProviderFromModelName(explicitModel)
+    : preset?.provider
+      || (!scopedPreset ? settings?.agent.provider : null)
+      || null;
   const provider = rawProvider === "auto"
     ? preset?.resolved_provider
       || (!scopedPreset ? settings?.agent.resolved_provider : null)

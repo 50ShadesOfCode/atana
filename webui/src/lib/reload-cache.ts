@@ -56,6 +56,7 @@ export function readReloadSessions(): ChatSummary[] {
       createdAt: typeof row.createdAt === "string" ? row.createdAt : null,
       updatedAt: typeof row.updatedAt === "string" ? row.updatedAt : null,
       ...(typeof row.modelPreset === "string" ? { modelPreset: row.modelPreset } : {}),
+      ...(typeof row.model === "string" ? { model: row.model } : {}),
       ...(typeof row.runStartedAt === "number" ? { runStartedAt: row.runStartedAt } : {}),
       ...(workspaceScope ? { workspaceScope } : {}),
       ...(typeof row.projectLocked === "boolean" ? { projectLocked: row.projectLocked } : {}),

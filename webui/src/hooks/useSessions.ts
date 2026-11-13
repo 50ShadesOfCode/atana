@@ -135,6 +135,7 @@ export function useSessions(): {
         title: "",
         preview: "",
         modelPreset: modelPreset ?? null,
+        model: null,
         workspaceScope: workspaceScope ?? null,
         projectLocked: false,
       },
