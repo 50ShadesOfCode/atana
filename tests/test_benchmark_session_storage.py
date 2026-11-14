@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 import sys
@@ -46,7 +47,11 @@ def test_session_storage_benchmark_emits_auditable_windows_safe_result(tmp_path:
     assert result["correctness"] == "PASS"
     assert result["git"]["commit"] == head
     assert isinstance(result["git"]["dirty"], bool)
-    assert result["dependencies"]["uv_lock_sha256"]
+    # uv.lock is generated locally and gitignored; its hash is present only when it exists.
+    lock = repo / "uv.lock"
+    assert result["dependencies"]["uv_lock_sha256"] == (
+        hashlib.sha256(lock.read_bytes()).hexdigest() if lock.is_file() else None
+    )
     assert result["dependencies"]["installed_sha256"]
     assert result["python"]["executable"] == sys.executable
     assert result["target_module"].startswith(str(repo.resolve()))

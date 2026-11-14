@@ -24,6 +24,7 @@ from nanobot.agent.tools.schema import (
 )
 from nanobot.security.workspace_access import current_tool_workspace
 from nanobot.utils.file_edit_events import FileDiff, FileEditResult, display_file_edit_path
+from nanobot.utils.file_io import write_bytes_atomic
 from nanobot.utils.helpers import build_image_content_blocks, detect_image_mime
 
 
@@ -745,7 +746,7 @@ class WriteFileTool(_FsTool):
                 raise ValueError("Unknown content")
             fp = self._resolve_write(path)
             fp.parent.mkdir(parents=True, exist_ok=True)
-            fp.write_text(content, encoding="utf-8", newline="")
+            write_bytes_atomic(fp, content.encode("utf-8"))
             self._file_states.record_write(fp)
             return f"Successfully wrote {len(content)} characters to {fp}"
         except PermissionError as e:
@@ -1104,7 +1105,7 @@ class EditFileTool(_FsTool):
             if not file_exists:
                 if old_text == "":
                     fp.parent.mkdir(parents=True, exist_ok=True)
-                    fp.write_text(new_text, encoding="utf-8", newline="")
+                    write_bytes_atomic(fp, new_text.encode("utf-8"))
                     self._file_states.record_write(fp)
                     return self._format_summary(fp, "", fp.read_bytes().decode("utf-8"), created=True)
                 return self._file_not_found_msg(path, fp)
@@ -1121,7 +1122,7 @@ class EditFileTool(_FsTool):
                 content = raw.decode("utf-8")
                 if content.strip():
                     return ToolResult.error(f"Error: Cannot create file — {path} already exists and is not empty.")
-                fp.write_text(new_text, encoding="utf-8", newline="")
+                write_bytes_atomic(fp, new_text.encode("utf-8"))
                 self._file_states.record_write(fp)
                 return self._format_summary(fp, content, fp.read_bytes().decode("utf-8"))
 
@@ -1218,7 +1219,7 @@ class EditFileTool(_FsTool):
             if uses_crlf:
                 new_content = new_content.replace("\n", "\r\n")
 
-            fp.write_bytes(new_content.encode("utf-8"))
+            write_bytes_atomic(fp, new_content.encode("utf-8"))
             self._file_states.record_write(fp)
             return self._format_summary(fp, content, new_content)
         except PermissionError as e:

@@ -53,7 +53,6 @@ dependencies = [
     "referencing>=0.30.0,<1.0.0",
     "regex>=2024.11.6",
     "json-repair>=0.57.0,<1.0.0",
-    "chardet>=3.0.2,<6.0.0",
     "openai>=2.8.0",
     "tiktoken>=0.12.0,<1.0.0",
     "jinja2>=3.1.0,<4.0.0",
@@ -65,7 +64,6 @@ dependencies = [
     "packaging>=24.0",
     "tzdata>=2025.2",
     "tzlocal>=5.3.1,<6.0.0",
-    "defusedxml>=0.7.1,<1.0.0",
     "pypdf>=6.21.3,<7.0.0",
     "python-docx>=1.1.0,<2.0.0",
     "openpyxl>=3.1.0,<4.0.0",
@@ -84,7 +82,6 @@ bedrock = [
 ]
 documents = [
     # Compatibility extra: document readers are bundled since v0.2.3.
-    "defusedxml>=0.7.1,<1.0.0",
     "pypdf>=6.21.3,<7.0.0",
     "python-docx>=1.1.0,<2.0.0",
     "openpyxl>=3.1.0,<4.0.0",

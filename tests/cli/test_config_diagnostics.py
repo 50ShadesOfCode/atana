@@ -21,6 +21,13 @@ _ANTHROPIC_BACKEND_CASES = (
 )
 
 
+@pytest.fixture(autouse=True)
+def _wide_console(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep rendered CLI lines on one line; assertions compare whole phrases."""
+    monkeypatch.setenv("COLUMNS", "200")
+    monkeypatch.setenv("LINES", "50")
+
+
 def _without_rendered_line_breaks(output: str) -> str:
     return "".join(output.splitlines())
 

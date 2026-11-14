@@ -1,6 +1,7 @@
 import json
 import os
 import re
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, TypeVar, cast, overload
 
@@ -131,6 +132,50 @@ def _apply_ssrf_whitelist(config: Config) -> None:
     configure_ssrf_whitelist(config.tools.ssrf_whitelist)
 
 
+def _normalize_env_segment(segment: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", segment.casefold())
+
+
+def redact_environment_values(
+    data: Any,
+    *,
+    environ: dict[str, str] | None = None,
+) -> Any:
+    """Replace values supplied by NANOBOT_* variables with their ${VAR} reference.
+
+    A config built from the environment must not copy those values into a new
+    file, where they would outlive a rotated variable and stop honouring it.
+    """
+    env = os.environ if environ is None else environ
+    prefix = str(Config.model_config.get("env_prefix") or "")
+    delimiter = str(Config.model_config.get("env_nested_delimiter") or "__")
+    if not prefix:
+        return data
+    paths: dict[tuple[str, ...], str] = {}
+    for name, value in env.items():
+        if value and name.startswith(prefix):
+            segments = name[len(prefix):].split(delimiter)
+            paths[tuple(_normalize_env_segment(segment) for segment in segments)] = name
+    if not paths:
+        return data
+
+    def walk(node: Any, path: tuple[str, ...]) -> Any:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                child = path + (_normalize_env_segment(str(key)),)
+                variable = paths.get(child)
+                if variable is not None and isinstance(value, str) and value == env[variable]:
+                    node[key] = f"${{{variable}}}"
+                else:
+                    walk(value, child)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item, path)
+        return node
+
+    return walk(data, ())
+
+
 def save_config(config: Config, config_path: Path | None = None) -> None:
     """
     Save configuration to file.
@@ -140,9 +185,12 @@ def save_config(config: Config, config_path: Path | None = None) -> None:
         config_path: Optional path to save to. Uses default if not provided.
     """
     path = config_path or get_config_path()
+    existed = path.exists()
     path.parent.mkdir(parents=True, exist_ok=True)
 
     data = config.model_dump(mode="json", by_alias=True)
+    if not existed:
+        data = redact_environment_values(data)
     # OAuth credentials live in dedicated token stores. Persist only the
     # non-credential request settings consumed by these provider backends.
     for alias, provider in (
@@ -161,6 +209,10 @@ def save_config(config: Config, config_path: Path | None = None) -> None:
 
     # Temp + replace so a crash mid-write cannot leave a truncated config.json.
     write_text_atomic(path, json.dumps(data, indent=2, ensure_ascii=False))
+    if not existed:
+        # The file can hold provider keys; do not rely on the user's umask.
+        with suppress(OSError):
+            path.chmod(0o600)
 
 
 def merge_missing_defaults(existing: object, defaults: object) -> object:

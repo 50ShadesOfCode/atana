@@ -15,6 +15,8 @@ from urllib.parse import parse_qs, urlparse
 from websockets.datastructures import Headers
 from websockets.http11 import Response
 
+from nanobot.utils.query_params import query_first as query_first
+
 QueryParams = dict[str, list[str]]
 
 _JSON_GZIP_MIN_BYTES = 4 * 1024
@@ -175,11 +177,6 @@ def parse_request_path(path_with_query: str) -> tuple[str, QueryParams]:
 
 def parse_query(path_with_query: str) -> QueryParams:
     return parse_request_path(path_with_query)[1]
-
-
-def query_first(query: QueryParams, key: str) -> str | None:
-    values = query.get(key)
-    return values[0] if values else None
 
 
 def is_localhost(connection: Any) -> bool:

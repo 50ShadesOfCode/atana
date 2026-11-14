@@ -495,6 +495,19 @@ class SqliteSessionStore:
             return {"key": key, "created_at": row[0], "updated_at": row[1],
                     "metadata": self._metadata(db, key, row[2])}
 
+    def read_summary(self, key: str) -> dict[str, str] | None:
+        """Read the sidebar title and preview without decoding the transcript."""
+        with self.transaction(write=False) as db:
+            row = db.execute(
+                "SELECT s.title, COALESCE(NULLIF(h.user_preview, ''), s.preview)"
+                " FROM sessions s LEFT JOIN history_heads h ON h.session_key = s.key"
+                " WHERE s.key=?",
+                (key,),
+            ).fetchone()
+        if row is None:
+            return None
+        return {"title": row[0] or "", "preview": row[1] or ""}
+
     def read_history_header(self, key: str) -> SessionHistoryPayload | None:
         """Read search identity and metadata without runtime checkpoints or inputs."""
         with self.transaction(write=False) as db:

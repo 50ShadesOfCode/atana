@@ -456,3 +456,21 @@ async def test_turn_end_reads_goal_without_loading_conversation_history(
         await sessions.state.aclose()
         monkeypatch.setattr(sessions._store, "_open_connection", open_connection)
     assert sessions.read_session_snapshot(key).messages == messages
+
+
+def test_successful_turn_retires_an_earlier_failed_owner() -> None:
+    wth._WEBSOCKET_ACTIVE_TURNS["chat-reset"] = {
+        "failed": wth._WebsocketTurn(
+            started_at=1.0, turn_id="old", transcript_persistence_failed=True,
+        ),
+        "fresh": wth._WebsocketTurn(started_at=2.0, turn_id="new"),
+    }
+    wth._sync_websocket_turn_projection("chat-reset")
+    assert wth.websocket_turn_id("chat-reset") == "new"
+
+    wth.clear_websocket_turn_if_current("chat-reset", "fresh")
+    wth.clear_failed_websocket_turns("chat-reset")
+
+    assert wth.websocket_turn_wall_started_at("chat-reset") is None
+    assert wth.websocket_turn_transcript_persistence_failed("chat-reset") is False
+    assert "chat-reset" not in wth._WEBSOCKET_ACTIVE_TURNS

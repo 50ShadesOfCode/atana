@@ -182,6 +182,9 @@ def startup_profile(private_home, tmp_path, monkeypatch):
         "agents": {"defaults": {"workspace": str(profile / "workspace"),
                                 "dream": {"enabled": False}}},
         "gateway": {"heartbeat": {"enabled": False}},
+        # A default WebUI listener would collide with a gateway already running
+        # on this machine; these tests only exercise startup and installation state.
+        "channels": {"websocket": {"enabled": False}},
     })
     return profile, config
 
@@ -318,7 +321,8 @@ set_home_path(profile)
 set_config_path(profile / 'config data' / 'config.json')
 config = Config.model_validate({'agents': {'defaults': {'workspace': str(profile / 'workspace'),
     'dream': {'enabled': False}}}, 'gateway': {'host': '127.0.0.1', 'port': port,
-    'heartbeat': {'enabled': False}}})
+    'heartbeat': {'enabled': False}},
+    'channels': {'websocket': {'enabled': False}}})
 gateway_runtime.warmup_token_encoding = lambda: None
 with installation_access():
     gateway_runtime._run_gateway(config, webui_static_dist=False, unconfigured_provider_error='No provider for lifecycle test')

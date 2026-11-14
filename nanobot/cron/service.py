@@ -208,6 +208,7 @@ class CronService:
         self.on_job = on_job
         self._store: CronStore | None = None
         self._timer_task: asyncio.Task[None] | None = None
+        self._in_flight_jobs: set[str] = set()
         self._running = False
         self._active_executions = 0
         self._store_dirty = False
@@ -590,7 +591,21 @@ class CronService:
             # single bad tick cannot silently stop all future jobs.
             self._arm_timer()
 
-    async def _execute_job(self, job: CronJob) -> None:
+    async def _execute_job(self, job: CronJob) -> bool:
+        """Run one job once; a duplicate trigger for the same id is ignored."""
+        if job.id in self._in_flight_jobs:
+            logger.warning(
+                "Cron: job '{}' is already running; ignoring the duplicate trigger", job.name,
+            )
+            return False
+        self._in_flight_jobs.add(job.id)
+        try:
+            await self._execute_job_once(job)
+            return True
+        finally:
+            self._in_flight_jobs.discard(job.id)
+
+    async def _execute_job_once(self, job: CronJob) -> None:
         schedule = job.schedule
         start_ms = _now_ms()
         logger.info("Cron: executing job '{}' ({})", job.name, job.id)
@@ -938,9 +953,9 @@ class CronService:
                         return False
                     if not force and not job.enabled:
                         return False
-                    await self._execute_job(job)
+                    started = await self._execute_job(job)
                     self._save_store()
-                    return True
+                    return started
             return False
         finally:
             self._active_executions -= 1

@@ -331,6 +331,23 @@ def clear_websocket_turn_if_current(
     return True
 
 
+def clear_failed_websocket_turns(chat_id: str) -> None:
+    """Drop owners whose transcript write failed once a later turn persisted.
+
+    The durable incomplete marker in the transcript still records the failure;
+    in-process status must not keep reporting that dead turn as running.
+    """
+    turns = _WEBSOCKET_ACTIVE_TURNS.get(chat_id)
+    if not turns:
+        return
+    stale = [owner for owner, turn in turns.items() if turn.transcript_persistence_failed]
+    if not stale:
+        return
+    for owner in stale:
+        turns.pop(owner, None)
+    _sync_websocket_turn_projection(chat_id)
+
+
 def clear_websocket_turns(chat_id: str) -> None:
     """Forget every in-process turn projection for a discarded chat."""
     _WEBSOCKET_ACTIVE_TURNS.pop(chat_id, None)

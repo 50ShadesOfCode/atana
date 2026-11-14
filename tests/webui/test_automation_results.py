@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -116,3 +117,19 @@ async def test_new_cron_run_identity_survives_reload(tmp_path: Path) -> None:
     assert record.run_id is not None
     assert cron_run_response(tmp_path / "runs", reloaded, record) == "reply"
     assert CronRunRecord.from_store_dict({"runAtMs": 1000, "status": "ok", "runId": 42}).run_id is None
+
+
+def test_run_records_are_capped(tmp_path, monkeypatch) -> None:
+    from nanobot.utils import run_records
+
+    monkeypatch.setattr(run_records, "MAX_RUN_RECORDS", 3)
+    for index in range(3):
+        path = write_run_record(tmp_path, f"run-{index}", {"status": "ok"})
+        os.utime(path, ns=(1_000_000_000 + index, 1_000_000_000 + index))
+
+    write_run_record(tmp_path, "run-3", {"status": "ok"})
+
+    names = sorted(item.name for item in tmp_path.glob("*.json"))
+    assert len(names) == 3
+    assert "run-0.json" not in names
+    assert "run-3.json" in names

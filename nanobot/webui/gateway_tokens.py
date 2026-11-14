@@ -8,7 +8,7 @@ from typing import Any, Literal
 
 from websockets.http11 import Request as WsRequest
 
-from nanobot.webui.http_utils import bearer_token, parse_query, query_first
+from nanobot.webui.http_utils import bearer_token
 
 IssuedTokenAudience = Literal["client", "webui"]
 
@@ -25,9 +25,7 @@ class GatewayTokenStore:
 
     def check_api_token(self, request: WsRequest) -> bool:
         self._purge_expired_api_tokens()
-        token = bearer_token(request.headers) or query_first(
-            parse_query(request.path), "token"
-        )
+        token = bearer_token(request.headers)
         if not token:
             return False
         expiry = self.api_tokens.get(token)

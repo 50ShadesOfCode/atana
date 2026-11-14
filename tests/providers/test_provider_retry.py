@@ -86,6 +86,25 @@ async def test_chat_with_retry_retries_transient_error_then_succeeds(monkeypatch
 
 
 @pytest.mark.asyncio
+async def test_chat_with_retry_gives_up_instead_of_waiting_hours(monkeypatch) -> None:
+    provider = ScriptedProvider([
+        LLMResponse(content="429 rate limit", finish_reason="error", retry_after=86_400),
+    ])
+    delays: list[float] = []
+
+    async def _fake_sleep(delay: float) -> None:
+        delays.append(delay)
+
+    monkeypatch.setattr("nanobot.providers.base.asyncio.sleep", _fake_sleep)
+
+    response = await provider.chat_with_retry(messages=[{"role": "user", "content": "hello"}])
+
+    assert response.finish_reason == "error"
+    assert delays == []
+    assert provider.calls == 1
+
+
+@pytest.mark.asyncio
 async def test_chat_with_retry_emits_structured_retry_lifecycle(monkeypatch) -> None:
     provider = ScriptedProvider([
         LLMResponse(

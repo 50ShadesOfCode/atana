@@ -3797,6 +3797,26 @@ async def test_api_token_pool_purges_expired(bus: MagicMock, tmp_path: Path) -> 
     assert channel.gateway.tokens.check_api_token(_LiveReq()) is True
 
 
+@pytest.mark.asyncio
+async def test_api_token_is_not_accepted_from_the_query_string(bus: MagicMock, tmp_path: Path) -> None:
+    sm = _seed_session(tmp_path)
+    channel = _ch(bus, session_manager=sm, port=29909)
+    import time as _time
+    channel.gateway.tokens.api_tokens["live"] = _time.monotonic() + 60
+
+    class _QueryReq:
+        path = "/api/sessions?token=live"
+        headers = {}
+
+    assert channel.gateway.tokens.check_api_token(_QueryReq()) is False
+
+    class _HeaderReq:
+        path = "/api/sessions"
+        headers = {"Authorization": "Bearer live"}
+
+    assert channel.gateway.tokens.check_api_token(_HeaderReq()) is True
+
+
 class _FakeConn:
     """Minimal connection stub with a configurable remote_address."""
 
@@ -4205,6 +4225,17 @@ def test_bootstrap_without_auth_rejects_remote_requests(bus: MagicMock) -> None:
     channel = _ch(bus, host="127.0.0.1")
     resp = channel.gateway.http._handle_bootstrap(_REMOTE, _NO_HEADERS)
     assert resp.status_code == 403
+
+
+def test_token_issue_without_a_secret_rejects_a_remote_client(bus: MagicMock) -> None:
+    channel = _ch(bus, host="192.168.1.10", tokenIssuePath="/auth/token")
+
+    remote = channel.gateway.http._handle_token_issue(_REMOTE, _NO_HEADERS)
+    assert remote.status_code == 403
+
+    local = channel.gateway.http._handle_token_issue(_LOCAL, _NO_HEADERS)
+    assert local.status_code == 200
+    assert json.loads(local.body)["token"].startswith("nbwt_")
 
 
 def test_bootstrap_without_auth_rejects_reverse_proxy_remote_headers(bus: MagicMock) -> None:

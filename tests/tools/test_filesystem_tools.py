@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from nanobot.agent.tools.file_state import file_read_context
@@ -29,6 +31,31 @@ async def test_file_creation_preserves_provided_newlines(tmp_path, newline, oper
 
     assert "Error" not in result
     assert target.read_bytes() == content.encode("utf-8")
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("operation", ["write", "edit"])
+async def test_failed_write_keeps_the_original_file(tmp_path, monkeypatch, operation):
+    target = tmp_path / "notes.md"
+    target.write_text("original\n", encoding="utf-8")
+
+    def boom(self: Path, other: Path) -> Path:  # noqa: ARG001
+        raise OSError("simulated crash before replace")
+
+    monkeypatch.setattr(Path, "replace", boom)
+
+    if operation == "write":
+        result = await WriteFileTool(workspace=tmp_path).execute(
+            path=str(target), content="new content\n",
+        )
+    else:
+        result = await EditFileTool(workspace=tmp_path).execute(
+            path=str(target), old_text="original", new_text="changed",
+        )
+
+    assert "Error" in result
+    assert target.read_text(encoding="utf-8") == "original\n"
+    assert list(tmp_path.glob(".*.tmp")) == []
 
 
 class TestReadFileTool:

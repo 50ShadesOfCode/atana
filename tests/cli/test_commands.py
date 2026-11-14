@@ -55,6 +55,13 @@ def mock_webui_bundle(monkeypatch) -> MagicMock:
     return prepare_bundle
 
 
+@pytest.fixture(autouse=True)
+def _wide_console(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep rendered CLI lines on one line; assertions compare whole phrases."""
+    monkeypatch.setenv("COLUMNS", "200")
+    monkeypatch.setenv("LINES", "50")
+
+
 def _without_rendered_line_breaks(output: str) -> str:
     return "".join(output.splitlines())
 
@@ -3560,6 +3567,8 @@ def test_gateway_local_trigger_queue_submits_agent_turns(
     config.agents.defaults.workspace = str(tmp_path / "config-workspace")
     config.agents.defaults.dream.enabled = False
     config.gateway.heartbeat.enabled = False
+    # Claim a throwaway instance; a gateway running on this machine owns the default one.
+    monkeypatch.setattr("nanobot.config.loader._current_config_path", tmp_path / "config.json")
     bus = MessageBus()
     seen: dict[str, object] = {}
 

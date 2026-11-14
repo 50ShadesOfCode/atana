@@ -60,7 +60,12 @@ def _inspect_metadata(spec: WorkerSpec) -> EnvironmentSnapshot:
     versions: dict[str, str] = {}
     records: dict[str, str] = {}
     for distribution in distributions(path=[str(sites[0])]):
-        raw_name, version = distribution.metadata["Name"], distribution.version
+        try:
+            raw_name, version = distribution.metadata["Name"], distribution.version
+        except Exception:
+            # A killed installer can remove METADATA entirely; recovery must not
+            # depend on parsing the damaged package.
+            continue
         if not raw_name or not version:
             # Interrupted pip transactions can leave an incomplete dist-info.
             # Missing targets are allowed by check_environment(repairing=True);

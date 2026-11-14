@@ -31,6 +31,7 @@ from nanobot.events import ModelRequestEvent
 from nanobot.pairing.events import PairingChanged
 from nanobot.session.display_history import HISTORY_GENERATION_METADATA_KEY
 from nanobot.session.webui_turns import (
+    clear_failed_websocket_turns,
     clear_websocket_turn_if_current,
     mark_websocket_turn_transcript_persistence_failed,
     websocket_turn_transcript_persistence_failed,
@@ -610,6 +611,8 @@ class WebUIOutboundDelivery:
             if persisted:
                 # A durable incomplete marker allows HTTP recovery after restart.
                 clear_websocket_turn_if_current(chat_id, turn_owner)
+                # A later durable turn also retires owners from earlier failures.
+                clear_failed_websocket_turns(chat_id)
             self.discard(chat_id, complete=True)
         await self._fanout(recipients, body, label=f" {body['event']} ")
 

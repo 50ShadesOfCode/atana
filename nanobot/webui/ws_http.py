@@ -74,6 +74,7 @@ from nanobot.webui.http_utils import (
 from nanobot.webui.http_utils import (
     is_local_browser_request as _is_local_browser_request,
 )
+from nanobot.webui.http_utils import is_localhost as _is_localhost
 from nanobot.webui.http_utils import is_loopback_host as _is_loopback_host
 from nanobot.webui.http_utils import (
     is_trusted_proxy_authenticated_request as _is_trusted_proxy_authenticated_request,
@@ -728,11 +729,14 @@ class GatewayHTTPHandler:
         if secret:
             if not _issue_route_secret_matches(request.headers, secret):
                 return connection.respond(401, "Unauthorized")
-        else:
+        elif not _is_localhost(connection):
+            # The bootstrap route is localhost-only in the same state; issuing a
+            # connection token to a remote peer would bypass that gate entirely.
             self._log.warning(
-                "token_issue_path is set but token_issue_secret is empty; "
-                "any client can obtain connection tokens — set token_issue_secret for production."
+                "token_issue_path is set without token_issue_secret; "
+                "refusing a non-local client — set token_issue_secret for remote access."
             )
+            return _http_error(403, "token_issue_path requires token_issue_secret")
         if not self.tokens.can_issue():
             self._log.error(
                 "too many outstanding issued tokens ({}), rejecting issuance",
@@ -873,7 +877,7 @@ class GatewayHTTPHandler:
 
         m = re.match(r"^/api/sessions/([^/]+)/automations$", got)
         if m:
-            return self._handle_session_automations(request, m.group(1))
+            return await asyncio.to_thread(self._handle_session_automations, request, m.group(1))
 
         m = re.fullmatch(r"/api/sessions/([^/]+)/subagents/([^/]+)/webui-thread", got)
         if m:

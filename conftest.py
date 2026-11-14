@@ -37,6 +37,15 @@ def _isolate_nanobot_log_activation() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
+def _isolate_cli_selection(monkeypatch: pytest.MonkeyPatch) -> None:
+    """CLI selectors are process-wide; restore them so no test retargets another."""
+    from nanobot.config import home, loader
+
+    monkeypatch.setattr(loader, "_current_config_path", loader._current_config_path)
+    monkeypatch.setattr(home, "_home_path", home._home_path)
+
+
+@pytest.fixture(autouse=True)
 def _isolate_runtime_stores(
     tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch,
 ) -> Iterator[None]:

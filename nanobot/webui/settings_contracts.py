@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from nanobot.utils.query_params import query_first
+
 QueryParams = dict[str, list[str]]
 
 
@@ -57,11 +59,6 @@ class WebUISettingsError(ValueError):
         super().__init__(message)
         self.message = message
         self.status = status
-
-
-def query_first(query: QueryParams, key: str) -> str | None:
-    values = query.get(key)
-    return values[0] if values else None
 
 
 def query_first_alias(query: QueryParams, snake: str, camel: str) -> str | None:

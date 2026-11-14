@@ -381,6 +381,8 @@ class LLMProvider(ABC):
 
     _CHAT_RETRY_DELAYS = (1, 2, 4)
     _PERSISTENT_MAX_DELAY = 60
+    # A provider-supplied Retry-After beyond this is not worth waiting for: give up.
+    _MAX_RETRY_AFTER_DELAY = 300
     _PERSISTENT_IDENTICAL_ERROR_LIMIT = 10
     _RETRY_HEARTBEAT_CHUNK = 30
     _TRANSIENT_ERROR_MARKERS = (
@@ -1697,6 +1699,15 @@ class LLMProvider(ABC):
                 break
 
             retry_after = self._extract_retry_after_from_response(response)
+            if retry_after and retry_after > self._MAX_RETRY_AFTER_DELAY:
+                # Waiting hours blocks the turn and retrying earlier ignores the provider.
+                logger.warning(
+                    "LLM transient error asked to wait {}s beyond the {}s cap; giving up: {}",
+                    int(round(retry_after)),
+                    self._MAX_RETRY_AFTER_DELAY,
+                    (response.content or "")[:120].lower(),
+                )
+                break
             base_delay = delays[min(attempt - 1, len(delays) - 1)]
             delay = (
                 retry_after + RETRY_AFTER_BUFFER

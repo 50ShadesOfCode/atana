@@ -676,6 +676,10 @@ class SessionManager:
         """Read session metadata without loading the transcript."""
         return cast(dict[str, Any] | None, self._store.read_metadata(key))
 
+    def read_session_summary(self, key: str) -> dict[str, str] | None:
+        """Read a session's sidebar title and preview without loading the transcript."""
+        return self._store.read_summary(key)
+
     def ensure_session_handles_offline(self) -> dict[str, str]:
         """Allocate missing handles during offline administration."""
         from nanobot.session.session_handles import (

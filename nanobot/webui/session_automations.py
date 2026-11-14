@@ -1,16 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Collection
-from typing import Any, Protocol, cast
+from typing import Any, Protocol
 
 from nanobot.cron.binding import binding_revision
 from nanobot.cron.session_turns import is_bound_cron_job
 from nanobot.cron.types import CronJob
-from nanobot.session.history_visibility import is_hidden_history_message
-from nanobot.session.manager import (
-    message_preview_text,
-    metadata_title,
-)
 from nanobot.triggers.local_types import LocalTrigger
 from nanobot.webui.session_identity import is_webui_session_key
 
@@ -41,6 +36,8 @@ class _LocalTriggerStoreLike(Protocol):
 
 class _SessionManagerLike(Protocol):
     def read_session_file(self, key: str) -> dict[str, Any] | None: ...
+
+    def read_session_summary(self, key: str) -> dict[str, str] | None: ...
 
 
 def session_automation_jobs(
@@ -318,10 +315,10 @@ def _websocket_origin_payload(
     title = ""
     preview = ""
     if session_manager is not None:
-        data = session_manager.read_session_file(session_key)
-        if isinstance(data, dict):
-            title = metadata_title(data.get("metadata"))
-            preview = _session_preview(data.get("messages"))
+        summary = session_manager.read_session_summary(session_key)
+        if summary is not None:
+            title = summary.get("title") or ""
+            preview = summary.get("preview") or ""
 
     return {
         "session_key": session_key,
@@ -331,22 +328,3 @@ def _websocket_origin_payload(
         "preview": preview,
     }
 
-
-def _session_preview(messages: Any) -> str:
-    if not isinstance(messages, list):
-        return ""
-    fallback_preview = ""
-    for message_value in cast(list[object], messages):
-        if not isinstance(message_value, dict):
-            continue
-        message = cast(dict[str, Any], message_value)
-        if is_hidden_history_message(message):
-            continue
-        text = message_preview_text(message)
-        if not text:
-            continue
-        if message.get("role") == "user":
-            return text
-        if not fallback_preview and message.get("role") == "assistant":
-            fallback_preview = text
-    return fallback_preview

@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Protocol, runtime_checkable
 
+from nanobot.utils.query_params import query_first
+
 QueryParams = Mapping[str, list[str]]
 
 
@@ -34,11 +36,6 @@ class ChannelConnectError(Exception):
         super().__init__(message)
         self.message = message
         self.status = status
-
-
-def query_first(query: QueryParams, key: str) -> str | None:
-    values = query.get(key)
-    return values[0] if values else None
 
 
 __all__ = [

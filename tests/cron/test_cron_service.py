@@ -1486,3 +1486,33 @@ async def test_reregistering_system_job_keeps_pending_every_run(tmp_path, monkey
     assert await boot(t0 + 100 * minute, 60 * minute) == t0 + 160 * minute
     assert await boot(t0 + 110 * minute, 60 * minute) == t0 + 160 * minute
     assert await boot(t0 + 170 * minute, 60 * minute) == t0 + 230 * minute
+
+
+@pytest.mark.asyncio
+async def test_manual_run_ignores_a_job_that_is_already_running(tmp_path) -> None:
+    store_path = tmp_path / "cron" / "jobs.json"
+    entered = asyncio.Event()
+    release = asyncio.Event()
+    calls: list[str] = []
+
+    async def on_job(job: CronJob) -> None:
+        calls.append(job.id)
+        entered.set()
+        await release.wait()
+
+    service = CronService(store_path, on_job=on_job)
+    job = service.add_job(
+        name="long",
+        schedule=CronSchedule(kind="every", every_ms=60_000),
+        message="hello",
+        **_bound_chat(),
+    )
+
+    running = asyncio.create_task(service.run_job(job.id))
+    await asyncio.wait_for(entered.wait(), 1)
+
+    assert await service.run_job(job.id) is False
+
+    release.set()
+    assert await running is True
+    assert calls == [job.id]
