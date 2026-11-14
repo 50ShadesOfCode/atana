@@ -669,6 +669,12 @@
       "voiceInput": "Transcrição"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "Padrão da instância",
+      "defaultModel": "Modelo padrão",
+      "defaultProvider": "Provedor padrão",
+      "defaultContext": "Janela de contexto padrão",
+      "defaultModelRequired": "Modelo e provedor são obrigatórios.",
       "requestOverridesHint": "Deixe os campos vazios para usar os ajustes do provedor. Trocar de provedor apaga estes valores.",
       "otherPresets": "Presets alternativos",
       "catalogAuthRequired": "A autorização expirou. Entre novamente.",
@@ -1934,6 +1940,9 @@
       }
     },
     "composer": {
+      "searchModels": "Pesquisar modelos",
+      "allModels": "Todos os modelos",
+      "useModelId": "Usar \"{{model}}\"",
       "placeholder": "Digite / para ver comandos, @ para mencionar conversas ou aplicativos e $ para escolher habilidades",
       "placeholderCompact": "Digite uma mensagem…",
       "placeholderOpening": "Abrindo um novo tópico…",

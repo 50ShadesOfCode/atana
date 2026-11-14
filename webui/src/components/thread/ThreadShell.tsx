@@ -928,7 +928,7 @@ export function ThreadShell({
     if (contextWindow) parts.push(`--context ${contextWindow}`);
     void client.sendSystemCommand(chatId, parts.join(" ")).catch(() => {});
   }, [chatId, client]);
-  const { models: catalogModels } = useModelCatalog(settings, getToken, Boolean(chatId));
+  const catalogModels = useModelCatalog(settings, getToken, Boolean(chatId));
   const modelPresetOptions = useMemo(
     () => modelPresetOptionsFromSettings(settings),
     [settings],

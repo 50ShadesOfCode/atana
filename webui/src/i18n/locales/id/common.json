@@ -1029,6 +1029,12 @@
       "installing": "Memasang paket yang diperlukan…"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "Bawaan instans",
+      "defaultModel": "Model bawaan",
+      "defaultProvider": "Penyedia bawaan",
+      "defaultContext": "Jendela konteks bawaan",
+      "defaultModelRequired": "Model dan penyedia wajib diisi.",
       "requestOverridesHint": "Kosongkan untuk memakai pengaturan penyedia. Mengganti penyedia menghapus nilai ini.",
       "otherPresets": "Preset cadangan",
       "catalogAuthRequired": "Otorisasi kedaluwarsa. Silakan masuk lagi.",
@@ -1932,6 +1938,9 @@
       }
     },
     "composer": {
+      "searchModels": "Cari model",
+      "allModels": "Semua model",
+      "useModelId": "Gunakan \"{{model}}\"",
       "placeholder": "Ketik / untuk melihat perintah, @ untuk memilih percakapan atau aplikasi, $ untuk memilih keterampilan",
       "placeholderCompact": "Ketik pesan…",
       "placeholderOpening": "Membuka topik baru…",

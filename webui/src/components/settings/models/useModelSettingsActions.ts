@@ -647,10 +647,16 @@ export function useModelSettingsActions({
     }
     setSaving(true);
     try {
+      const current = latestSettings.current;
       const payload = await updateAgentModel(client, {
         model: model.trim(),
         provider: provider.trim(),
         contextWindowTokens,
+        // Saving the same model must not detach a preset and drop its generation settings.
+        clearPreset: Boolean(current) && (
+          model.trim() !== current?.agent.model
+          || provider.trim() !== (current?.agent.provider || "")
+        ),
       });
       applyPayload(
         { ...payload, usage: payload.usage ?? settings?.usage },

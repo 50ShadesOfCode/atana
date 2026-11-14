@@ -1029,6 +1029,12 @@
       "installing": "必要なパッケージをインストール中…"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "インスタンスの既定値",
+      "defaultModel": "既定のモデル",
+      "defaultProvider": "既定のプロバイダー",
+      "defaultContext": "既定のコンテキストウィンドウ",
+      "defaultModelRequired": "モデルとプロバイダーは必須です。",
       "requestOverridesHint": "空欄はプロバイダー設定を使用します。プロバイダーを変更すると、ここに入力した値は消去されます。",
       "otherPresets": "フォールバックプリセット",
       "catalogAuthRequired": "認証が失効しました。再度ログインしてください。",
@@ -1932,6 +1938,9 @@
       }
     },
     "composer": {
+      "searchModels": "モデルを検索",
+      "allModels": "すべてのモデル",
+      "useModelId": "「{{model}}」を使用",
       "placeholder": "/ でコマンド、@ で会話やアプリ、$ でスキルを選択",
       "placeholderCompact": "メッセージを入力…",
       "placeholderOpening": "新しいトピックを開いています…",

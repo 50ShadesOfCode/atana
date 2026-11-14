@@ -1029,6 +1029,12 @@
       "installing": "Đang cài các gói cần thiết…"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "Mặc định của instance",
+      "defaultModel": "Mô hình mặc định",
+      "defaultProvider": "Nhà cung cấp mặc định",
+      "defaultContext": "Cửa sổ ngữ cảnh mặc định",
+      "defaultModelRequired": "Cần nhập mô hình và nhà cung cấp.",
       "requestOverridesHint": "Để trống để dùng thiết lập nhà cung cấp. Đổi nhà cung cấp sẽ xóa các giá trị này.",
       "otherPresets": "Cấu hình dự phòng",
       "catalogAuthRequired": "Quyền truy cập đã hết hạn. Vui lòng đăng nhập lại.",
@@ -1932,6 +1938,9 @@
       }
     },
     "composer": {
+      "searchModels": "Tìm mô hình",
+      "allModels": "Tất cả mô hình",
+      "useModelId": "Dùng \"{{model}}\"",
       "placeholder": "Nhập / để xem lệnh, @ để chọn cuộc trò chuyện hoặc ứng dụng, $ để chọn kỹ năng",
       "placeholderCompact": "Nhập tin nhắn…",
       "placeholderOpening": "Đang mở chủ đề mới…",

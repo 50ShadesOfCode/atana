@@ -177,7 +177,7 @@ async def test_session_preset_wins_when_both_keys_are_present(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_unusable_session_model_falls_back_to_the_default(tmp_path) -> None:
+async def test_unusable_session_model_falls_back_without_forgetting_the_choice(tmp_path) -> None:
     def loader(target):
         raise ValueError("No API key configured for provider 'openai'.")
 
@@ -189,9 +189,10 @@ async def test_unusable_session_model_falls_back_to_the_default(tmp_path) -> Non
     runtime = await loop.runtime_for_session(loop.sessions.get_or_create("cli:direct"))
 
     assert runtime.model == "base-model"
+    # The provider may only be broken until its config is fixed; keep the stored choice.
     assert model_selection_from_metadata(
         loop.sessions.get_or_create("cli:direct").metadata,
-    ) is None
+    ) is not None
 
 
 @pytest.mark.asyncio

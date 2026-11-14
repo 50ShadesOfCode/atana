@@ -60,21 +60,23 @@ export function toModelBadgeInfo(
     : preset?.provider
       || (!scopedPreset ? settings?.agent.provider : null)
       || null;
-  const provider = rawProvider === "auto"
-    ? preset?.resolved_provider
-      || (!scopedPreset ? settings?.agent.resolved_provider : null)
-      || null
-    : rawProvider || inferProviderFromModelName(model);
+  // The instance default's resolution says nothing about an explicit model's provider.
+  const provider = explicitModel
+    ? (rawProvider === "auto" ? inferProviderFromModelName(explicitModel) : rawProvider) || null
+    : rawProvider === "auto"
+      ? preset?.resolved_provider
+        || (!scopedPreset ? settings?.agent.resolved_provider : null)
+        || null
+      : rawProvider || inferProviderFromModelName(model);
   const providerRow = provider
     ? settings?.providers?.find((item) => item.name === provider)
     : null;
-  // A stored model was validated by the server when it was selected; only an
-  // unresolved provider or an unconfigured one still needs setup.
+  // A stored model was validated by the server when it was selected.
   const needsSetup = Boolean(
     settings
     && !explicitModel
     && (!model || !provider || !providerRow || !providerRow.configured),
-  ) || Boolean(settings && explicitModel && (!model || !provider));
+  );
   return {
     label,
     model: compactModelName(model),

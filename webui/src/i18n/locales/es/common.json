@@ -1029,6 +1029,12 @@
       "installing": "Instalando dependencias…"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "Valor predeterminado de la instancia",
+      "defaultModel": "Modelo predeterminado",
+      "defaultProvider": "Proveedor predeterminado",
+      "defaultContext": "Ventana de contexto predeterminada",
+      "defaultModelRequired": "El modelo y el proveedor son obligatorios.",
       "requestOverridesHint": "Deja los campos vacíos para usar los ajustes del proveedor. Cambiar de proveedor borra estos valores.",
       "otherPresets": "Preajustes alternativos",
       "catalogAuthRequired": "La autorización ha caducado. Inicia sesión de nuevo.",
@@ -1932,6 +1938,9 @@
       }
     },
     "composer": {
+      "searchModels": "Buscar modelos",
+      "allModels": "Todos los modelos",
+      "useModelId": "Usar \"{{model}}\"",
       "placeholder": "Escribe / para ver comandos, @ para mencionar conversaciones o aplicaciones y $ para elegir habilidades",
       "placeholderCompact": "Escribe un mensaje…",
       "placeholderOpening": "Abriendo un nuevo tema…",

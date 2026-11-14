@@ -428,9 +428,7 @@ class MyTool(Tool):
                 "Error: direct 'context_window_tokens' changes are instance-wide and disabled "
                 "during an active session; switch models with 'model' or 'model_preset'"
             )
-        if key == "model":
-            self._runtime_control.set_model(cast(str, value))
-        elif key == "context_window_tokens":
+        if key == "context_window_tokens":
             self._runtime_control.set_context_window_tokens(cast(int, value))
         else:
             self._runtime_control.set_max_iterations(cast(int, value))

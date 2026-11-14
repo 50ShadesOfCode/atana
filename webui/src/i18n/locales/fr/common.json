@@ -1029,6 +1029,12 @@
       "installing": "Installation des dépendances…"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "Valeurs par défaut de l’instance",
+      "defaultModel": "Modèle par défaut",
+      "defaultProvider": "Fournisseur par défaut",
+      "defaultContext": "Fenêtre de contexte par défaut",
+      "defaultModelRequired": "Le modèle et le fournisseur sont obligatoires.",
       "requestOverridesHint": "Laissez les champs vides pour utiliser les réglages du fournisseur. Changer de fournisseur efface ces valeurs.",
       "otherPresets": "Préréglages de secours",
       "catalogAuthRequired": "L’autorisation a expiré. Veuillez vous reconnecter.",
@@ -1932,6 +1938,9 @@
       }
     },
     "composer": {
+      "searchModels": "Rechercher des modèles",
+      "allModels": "Tous les modèles",
+      "useModelId": "Utiliser « {{model}} »",
       "placeholder": "Tapez / pour voir les commandes, @ pour les conversations ou les applis, $ pour les compétences",
       "placeholderCompact": "Votre message…",
       "placeholderOpening": "Ouverture d’un nouveau sujet…",

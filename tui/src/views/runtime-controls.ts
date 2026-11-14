@@ -212,9 +212,11 @@ export class RuntimeControls {
         preset.name.toLocaleLowerCase(),
         preset,
       ]))
-      if (!presets.has(this.modelPreset.toLocaleLowerCase())) {
-        presets.set(this.modelPreset.toLocaleLowerCase(), {
-          name: this.modelPreset,
+      // An explicit session model has no preset name; list it under the model id.
+      const currentName = this.modelPreset || this.model
+      if (!presets.has(currentName.toLocaleLowerCase())) {
+        presets.set(currentName.toLocaleLowerCase(), {
+          name: currentName,
           model: this.model,
         })
       }
@@ -236,15 +238,16 @@ export class RuntimeControls {
     }
     this.options.beforeOpen()
     this.kind = "model"
+    const currentName = this.modelPreset || this.model
     const choices: Choice[] = this.modelPresets
       .map((preset) => ({
         kind: "model" as const,
         name: preset.name,
-        label: `${preset.name === this.modelPreset ? "●" : " "} ${preset.name}`,
+        label: `${preset.name === currentName ? "●" : " "} ${preset.name}`,
         detail: preset.model,
       }))
-      .sort((left, right) => Number(right.name === this.modelPreset)
-        - Number(left.name === this.modelPreset))
+      .sort((left, right) => Number(right.name === currentName)
+        - Number(left.name === currentName))
     this.menu.show(choices, "", rendererLimit(this.renderer.height))
     this.opened()
   }
@@ -308,7 +311,7 @@ export class RuntimeControls {
   }
 
   private render(): void {
-    this.modelText.content = `${this.modelPreset} ▾`
+    this.modelText.content = `${this.modelPreset || this.model} ▾`
     const access = this.scope.access_mode === "full" ? "full access" : "workspace access"
     this.accessText.content = `     ${access} ▾`
     this.renderColors()

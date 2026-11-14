@@ -573,14 +573,14 @@ class AgentLoop:
         except (KeyError, ValueError) as exc:
             if not recover_removed:
                 raise
+            # Keep the stored choice: the provider may only be broken until config is fixed.
             logger.warning(
                 "Session '{}' cannot use model '{}'; falling back to default: {}",
                 session.key,
                 selection.model,
                 exc,
             )
-            session.metadata.pop(SESSION_MODEL_METADATA_KEY, None)
-            return None
+            return self.llm_runtime()
 
     async def runtime_for_session(
         self,

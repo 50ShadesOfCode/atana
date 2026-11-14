@@ -840,7 +840,10 @@ describe("Settings models", () => {
 
     await togglePresetEditor();
     fireEvent.click(screen.getByRole("button", { name: /Advanced options/ }));
-    fireEvent.change(screen.getByLabelText("Context window"), { target: { value: "128k" } });
+    fireEvent.change(
+      within(screen.getByRole("dialog", { name: "Advanced options" })).getByLabelText("Context window"),
+      { target: { value: "128k" } },
+    );
     expect(summary.getByText("256K Default")).toBeInTheDocument();
   });
 

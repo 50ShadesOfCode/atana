@@ -849,6 +849,12 @@
       "voiceInput": "Transcription"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "Instance default",
+      "defaultModel": "Default model",
+      "defaultProvider": "Default provider",
+      "defaultContext": "Default context window",
+      "defaultModelRequired": "Model and provider are required.",
       "requestOverridesHint": "Leave fields empty to use provider settings. Changing the provider clears these values.",
       "otherPresets": "Fallback presets",
       "catalogAuthRequired": "Authorization expired. Please sign in again.",
@@ -2114,6 +2120,9 @@
       }
     },
     "composer": {
+      "searchModels": "Search models",
+      "allModels": "All models",
+      "useModelId": "Use \"{{model}}\"",
       "placeholder": "Type / for commands, @ for chats or apps, $ for skills",
       "placeholderCompact": "Type a message…",
       "placeholderOpening": "Opening a new topic…",

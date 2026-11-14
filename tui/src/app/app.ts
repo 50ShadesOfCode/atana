@@ -693,7 +693,14 @@ export class NanobotTui {
       this.currentChatId = event.chat_id
       this.closeUsage()
       if (event.usage) this.lastUsage = event.usage
-      if (event.model_preset !== undefined) {
+      if (typeof event.model === "string" && event.model.trim()) {
+        // An explicit model replaces the preset; the empty preset keeps it off the
+        // instance default that setDefaultModel follows.
+        this.sessionModelPreset = ""
+        this.modelName = event.model.trim()
+        this.modelPreset = ""
+        this.updateTitle()
+      } else if (event.model_preset !== undefined) {
         this.applyModelPreset(event.model_preset)
         this.updateTitle()
       }
@@ -1708,8 +1715,12 @@ export class NanobotTui {
 
   private applySessionModel(session: SessionSummary): void {
     if (session.model) {
-      this.sessionModelPreset = null
-      this.setTurnModel(session.model)
+      // An explicit model must not track the instance default; setDefaultModel
+      // only overrides a null marker, and an empty preset shows the model itself.
+      this.sessionModelPreset = ""
+      this.modelName = session.model
+      this.modelPreset = ""
+      this.updateTitle()
       return
     }
     this.applyModelPreset(session.modelPreset)

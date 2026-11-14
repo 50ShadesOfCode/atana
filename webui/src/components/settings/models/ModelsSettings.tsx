@@ -730,12 +730,12 @@ export function ModelsSettings({
     <div className="settings-stack">
       <section>
         <SettingsSectionTitle>
-          {tx("settings.models.defaultTitle", "Default model")}
+          {tx("settings.models.defaultTitle", "Instance default")}
         </SettingsSectionTitle>
         <SettingsGroup>
           <div className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-end sm:px-5">
             <label className="flex min-w-0 flex-1 flex-col gap-1 text-[12px] font-medium text-muted-foreground">
-              {tx("settings.models.defaultModel", "Model")}
+              {tx("settings.models.defaultModel", "Default model")}
               <Input
                 value={defaultModel}
                 onChange={(event) => setDefaultModel(event.target.value)}
@@ -744,7 +744,7 @@ export function ModelsSettings({
               />
             </label>
             <label className="flex w-full flex-col gap-1 text-[12px] font-medium text-muted-foreground sm:w-44">
-              {tx("settings.models.defaultProvider", "Provider")}
+              {tx("settings.models.defaultProvider", "Default provider")}
               <select
                 value={defaultProvider}
                 onChange={(event) => setDefaultProvider(event.target.value)}
@@ -757,7 +757,7 @@ export function ModelsSettings({
               </select>
             </label>
             <label className="flex w-full flex-col gap-1 text-[12px] font-medium text-muted-foreground sm:w-36">
-              {tx("settings.models.defaultContext", "Context window")}
+              {tx("settings.models.defaultContext", "Default context window")}
               <Input
                 value={defaultContext}
                 inputMode="numeric"
@@ -773,7 +773,7 @@ export function ModelsSettings({
               {saving ? (
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden />
               ) : null}
-              {tx("settings.models.saveDefault", "Save")}
+              {t("settings.actions.save")}
             </Button>
           </div>
         </SettingsGroup>

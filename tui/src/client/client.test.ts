@@ -1350,6 +1350,7 @@ describe("gateway protocol", () => {
         updatedAt: "2026-08-13T10:00:00Z",
         runStartedAt: 123,
         modelPreset: "Deep Research",
+        model: null,
         pinned: true,
         archived: false,
       }])

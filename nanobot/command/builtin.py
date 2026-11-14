@@ -342,6 +342,11 @@ async def _model_command_status(loop: AgentLoop, session: Session) -> str:
     ])
 
 
+# The same window the my tool accepts for a direct context change.
+_MIN_CONTEXT_WINDOW_TOKENS = 4096
+_MAX_CONTEXT_WINDOW_TOKENS = 1_000_000
+
+
 def _parse_model_args(args: str) -> tuple[str, str | None, int | None]:
     """Split a target from the optional --provider/--context flags."""
     tokens = args.split()
@@ -351,18 +356,22 @@ def _parse_model_args(args: str) -> tuple[str, str | None, int | None]:
     index = 0
     while index < len(tokens):
         token = tokens[index]
-        if token == "--provider" and index + 1 < len(tokens):
-            provider = tokens[index + 1]
-            index += 2
-            continue
-        if token == "--context" and index + 1 < len(tokens):
-            raw = tokens[index + 1]
-            try:
-                context_window_tokens = int(raw)
-            except ValueError:
-                raise ValueError(f"context window must be an integer, got {raw!r}") from None
-            if context_window_tokens <= 0:
-                raise ValueError("context window must be a positive integer")
+        if token in {"--provider", "--context"}:
+            value = tokens[index + 1] if index + 1 < len(tokens) else ""
+            if not value or value.startswith("--"):
+                raise ValueError(f"{token} requires a value")
+            if token == "--provider":
+                provider = value
+            else:
+                try:
+                    context_window_tokens = int(value)
+                except ValueError:
+                    raise ValueError(f"context window must be an integer, got {value!r}") from None
+                if not _MIN_CONTEXT_WINDOW_TOKENS <= context_window_tokens <= _MAX_CONTEXT_WINDOW_TOKENS:
+                    raise ValueError(
+                        "context window must be between "
+                        f"{_MIN_CONTEXT_WINDOW_TOKENS} and {_MAX_CONTEXT_WINDOW_TOKENS} tokens"
+                    )
             index += 2
             continue
         target.append(token)

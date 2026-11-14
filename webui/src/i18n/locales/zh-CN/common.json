@@ -849,6 +849,12 @@
       "voiceInput": "语音转写"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "实例默认值",
+      "defaultModel": "默认模型",
+      "defaultProvider": "默认提供商",
+      "defaultContext": "默认上下文窗口",
+      "defaultModelRequired": "模型和提供商为必填项。",
       "requestOverridesHint": "留空时使用提供商设置。更换提供商会清空这里填写的值。",
       "otherPresets": "备用预设",
       "catalogAuthRequired": "授权已失效，请重新登录。",
@@ -2114,6 +2120,9 @@
       }
     },
     "composer": {
+      "searchModels": "搜索模型",
+      "allModels": "所有模型",
+      "useModelId": "使用“{{model}}”",
       "placeholder": "输入 / 查看命令，@ 引用会话或应用，$ 选择技能",
       "placeholderCompact": "输入消息…",
       "placeholderOpening": "正在打开新话题…",

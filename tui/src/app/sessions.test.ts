@@ -265,6 +265,30 @@ describe("NanobotTui session navigation", () => {
     expect(ui.runtimeControls.modelText.plainText).not.toContain("DeepSeek")
   })
 
+  test("shows a session's explicit model and keeps it across default updates", async () => {
+    setup = await createRenderer({ width: 96, height: 20, screenMode: "alternate-screen" })
+    const app = mount(setup)
+    const ui = app as unknown as { runtimeControls: { modelText: { plainText: string } } }
+
+    app.accept({
+      event: "attached",
+      chat_id: "chat",
+      model: "openai/gpt-4.1",
+      model_preset: null,
+    })
+    await setup.flush()
+    expect(ui.runtimeControls.modelText.plainText).toBe("openai/gpt-4.1 ▾")
+
+    app.accept({
+      event: "runtime_model_updated",
+      model_name: "deepseek/deepseek-chat",
+      model_preset: null,
+    })
+    await setup.flush()
+    expect(ui.runtimeControls.modelText.plainText).toBe("openai/gpt-4.1 ▾")
+    expect(ui.runtimeControls.modelText.plainText).not.toContain("deepseek")
+  })
+
   test("returns a default-following chat to the canonical default preset", async () => {
     setup = await createRenderer({ width: 96, height: 20, screenMode: "alternate-screen" })
     const app = NanobotTui.mount(

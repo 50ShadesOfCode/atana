@@ -90,6 +90,7 @@ export type InboundEvent =
   | {
       event: "attached"
       chat_id: string
+      model?: string | null
       model_preset?: string | null
       usage?: TokenUsage
       recovery_state?: RecoveryState

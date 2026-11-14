@@ -1450,7 +1450,13 @@ function modelGenerationSettingsPayload(
 
 export async function updateAgentModel(
   transport: WebUIMutationTransport,
-  update: { model: string; provider: string; contextWindowTokens?: number },
+  update: {
+    model: string;
+    provider: string;
+    contextWindowTokens?: number;
+    /** Detach the active preset; only when the model or provider actually changes. */
+    clearPreset?: boolean;
+  },
 ): Promise<Omit<SettingsPayload, "usage"> & Partial<Pick<SettingsPayload, "usage">>> {
   return mutation<Omit<SettingsPayload, "usage">>(
     transport,
@@ -1458,8 +1464,7 @@ export async function updateAgentModel(
     {
       model: update.model,
       provider: update.provider,
-      // An explicit default replaces the active preset; otherwise the preset keeps winning.
-      model_preset: "",
+      ...(update.clearPreset ? { model_preset: "" } : {}),
       ...(update.contextWindowTokens
         ? { context_window_tokens: update.contextWindowTokens }
         : {}),

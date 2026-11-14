@@ -1029,6 +1029,12 @@
       "installing": "正在安裝所需套件…"
     },
     "models": {
+      "defaultModelPlaceholder": "provider/model",
+      "defaultTitle": "執行個體預設值",
+      "defaultModel": "預設模型",
+      "defaultProvider": "預設供應商",
+      "defaultContext": "預設內容視窗",
+      "defaultModelRequired": "模型與供應商為必填。",
       "requestOverridesHint": "留空時使用供應商設定。更換供應商會清空這裡填寫的值。",
       "otherPresets": "備用預設",
       "catalogAuthRequired": "授權已失效，請重新登入。",
@@ -1932,6 +1938,9 @@
       }
     },
     "composer": {
+      "searchModels": "搜尋模型",
+      "allModels": "所有模型",
+      "useModelId": "使用「{{model}}」",
       "placeholder": "輸入 / 查看命令，@ 引用對話或應用程式，$ 選擇技能",
       "placeholderCompact": "輸入訊息…",
       "placeholderOpening": "正在開啟新話題…",

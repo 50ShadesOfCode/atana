@@ -465,3 +465,27 @@ async def test_model_command_rejects_a_bad_context_window(tmp_path) -> None:
     assert model_selection_from_metadata(
         loop.sessions.get_or_create("cli:direct").metadata,
     ) is None
+
+
+@pytest.mark.asyncio
+async def test_model_command_rejects_a_flag_without_a_value(tmp_path) -> None:
+    loop = _make_loop(tmp_path, preset_snapshot_loader=_selection_loader)
+
+    out = await cmd_model(_ctx(loop, "/model gpt-4.1 --provider", args="gpt-4.1 --provider"))
+
+    assert out.content == "Could not switch model: --provider requires a value"
+    assert model_selection_from_metadata(
+        loop.sessions.get_or_create("cli:direct").metadata,
+    ) is None
+
+
+@pytest.mark.asyncio
+async def test_model_command_rejects_a_context_window_outside_bounds(tmp_path) -> None:
+    loop = _make_loop(tmp_path, preset_snapshot_loader=_selection_loader)
+
+    out = await cmd_model(_ctx(loop, "/model gpt-4.1 --context 1", args="gpt-4.1 --context 1"))
+
+    assert out.content == "Could not switch model: context window must be between 4096 and 1000000 tokens"
+    assert model_selection_from_metadata(
+        loop.sessions.get_or_create("cli:direct").metadata,
+    ) is None
