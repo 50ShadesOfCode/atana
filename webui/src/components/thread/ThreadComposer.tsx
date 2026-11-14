@@ -238,6 +238,8 @@ interface ThreadComposerProps {
   modelPresets?: ModelPresetOption[];
   onModelPresetChange?: (name: string) => void;
   catalogModels?: ModelCatalogOption[];
+  catalogLoading?: boolean;
+  onCatalogOpen?: () => void;
   currentModel?: string | null;
   onModelChange?: (model: string, provider: string, contextWindow?: number) => void;
   modelProvider?: string | null;
@@ -790,6 +792,8 @@ export function ThreadComposer({
   modelPresets = [],
   onModelPresetChange,
   catalogModels = [],
+  catalogLoading = false,
+  onCatalogOpen,
   currentModel = null,
   onModelChange,
   modelProvider = null,
@@ -2224,6 +2228,8 @@ export function ThreadComposer({
       modelPresets={modelPresets}
       onPresetChange={onModelPresetChange}
       catalogModels={catalogModels}
+      catalogLoading={catalogLoading}
+      onCatalogOpen={onCatalogOpen}
       currentModel={currentModel}
       onModelChange={onModelChange}
       onManageModels={onManageModels}

@@ -101,6 +101,8 @@ interface ModelPresetBadgeProps {
   modelPresets?: ModelPresetOption[];
   onPresetChange?: (name: string) => void;
   catalogModels?: ModelCatalogOption[];
+  catalogLoading?: boolean;
+  onCatalogOpen?: () => void;
   currentModel?: string | null;
   onModelChange?: (model: string, provider: string, contextWindow?: number) => void;
   onManageModels?: () => void;
@@ -120,6 +122,8 @@ export function ModelPresetBadge({
   modelPresets = [],
   onPresetChange,
   catalogModels = [],
+  catalogLoading = false,
+  onCatalogOpen,
   currentModel,
   onModelChange,
   onManageModels,
@@ -169,7 +173,7 @@ export function ModelPresetBadge({
       : modelPresets.map((preset, index) => index === listedIndex ? activePreset : preset);
   const opensSetup = Boolean(onClick);
   const canSwitch = !opensSetup && Boolean(onPresetChange) && activeName !== "" && presets.length > 1;
-  const canOpenPicker = !opensSetup && (canSwitch || Boolean(onManageModels));
+  const canOpenPicker = !opensSetup && (canSwitch || Boolean(onManageModels) || Boolean(onModelChange));
   const pickerPresets = activeName && onPresetChange ? presets : [activePreset];
   const currentIndex = Math.max(0, presets.findIndex((preset) => preset.name === activeName));
   const pillHeight = isHero ? 32 : 36;
@@ -331,6 +335,7 @@ export function ModelPresetBadge({
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen);
+        if (nextOpen) onCatalogOpen?.();
         if (!nextOpen) requestAnimationFrame(() => onRequestComposerFocus?.());
       }}
     >
@@ -467,6 +472,11 @@ export function ModelPresetBadge({
           }}
           className="max-h-[min(16rem,var(--radix-popover-content-available-height))] overflow-y-auto py-1 scrollbar-thin scrollbar-track-transparent"
         >
+          {onModelChange && catalogLoading && !filteredCatalog.length && !modelQuery.trim() ? (
+            <div className="px-2.5 py-2 text-[13px] text-muted-foreground">
+              {t("settings.models.loadingModels", { defaultValue: "Loading models..." })}
+            </div>
+          ) : null}
           {filteredCatalog.length ? (
             <div className="px-2.5 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
               {t("thread.composer.allModels", { defaultValue: "All models" })}

@@ -185,3 +185,50 @@ describe("ModelPresetBadge selected preset tooltip", () => {
     await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument());
   });
 });
+
+describe("ModelPresetBadge model catalog", () => {
+  it("asks for the catalog on open and shows a loading row meanwhile", async () => {
+    const user = userEvent.setup();
+    const onCatalogOpen = vi.fn();
+    render(
+      <ModelPresetBadge
+        label="deepseek-v4-pro"
+        modelDetail="opencode_go/deepseek-v4-pro"
+        catalogLoading
+        onCatalogOpen={onCatalogOpen}
+        onModelChange={vi.fn()}
+        isHero
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "deepseek-v4-pro" }));
+
+    expect(onCatalogOpen).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText("Loading models...")).toBeInTheDocument();
+  });
+
+  it("reports the model and its provider when one is picked", async () => {
+    const user = userEvent.setup();
+    const onModelChange = vi.fn();
+    render(
+      <ModelPresetBadge
+        label="Current model"
+        modelDetail="openai/gpt-5"
+        catalogModels={[{
+          provider: "anthropic",
+          providerLabel: "Anthropic",
+          id: "claude-sonnet-4",
+          label: "Claude Sonnet 4",
+          contextWindow: 200_000,
+        }]}
+        onModelChange={onModelChange}
+        isHero
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Current model" }));
+    await user.click(screen.getByRole("option", { name: "claude-sonnet-4" }));
+
+    expect(onModelChange).toHaveBeenCalledWith("claude-sonnet-4", "anthropic", 200_000);
+  });
+});

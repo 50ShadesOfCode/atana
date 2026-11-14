@@ -928,7 +928,11 @@ export function ThreadShell({
     if (contextWindow) parts.push(`--context ${contextWindow}`);
     void client.sendSystemCommand(chatId, parts.join(" ")).catch(() => {});
   }, [chatId, client]);
-  const catalogModels = useModelCatalog(settings, getToken, Boolean(chatId));
+  const {
+    models: catalogModels,
+    loading: catalogLoading,
+    reload: reloadCatalog,
+  } = useModelCatalog(settings, getToken);
   const modelPresetOptions = useMemo(
     () => modelPresetOptionsFromSettings(settings),
     [settings],
@@ -1428,6 +1432,8 @@ export function ThreadShell({
           modelPresets={modelPresetOptions}
           onModelPresetChange={handleModelPresetChange}
           catalogModels={catalogModels}
+          catalogLoading={catalogLoading}
+          onCatalogOpen={reloadCatalog}
           currentModel={explicitModel}
           onModelChange={handleModelChange}
           modelProvider={modelBadge.provider}
@@ -1485,6 +1491,8 @@ export function ThreadShell({
           modelPresets={modelPresetOptions}
           onModelPresetChange={handleModelPresetChange}
           catalogModels={catalogModels}
+          catalogLoading={catalogLoading}
+          onCatalogOpen={reloadCatalog}
           currentModel={explicitModel}
           onModelChange={handleModelChange}
           modelProvider={modelBadge.provider}
