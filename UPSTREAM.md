@@ -62,7 +62,7 @@ Fork-only files (no upstream counterpart): `webui/src/components/thread/useModel
 - `nanobot/webui/{gateway_tokens,http_utils,outbound_delivery,session_automations,settings_contracts,ws_http}.py`, `nanobot/channels/connect.py`
 - `conftest.py`, `pyproject.toml`
 
-`nanobot/agent/tools/filesystem.py` is no longer edited by the fork: upstream moved writes to `nanobot/execution/files.py`, which now carries the atomic-write seam.
+`nanobot/agent/tools/filesystem.py` is no longer edited by the fork: upstream moved writes to `nanobot/execution/files.py`, which now carries the atomic-write seam. Upstream tests that patched `Path.replace` patch `nanobot.utils.file_io.replace_atomic` instead, the step that can fail.
 
 ## Releases
 

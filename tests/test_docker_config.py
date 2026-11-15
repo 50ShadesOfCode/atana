@@ -66,10 +66,11 @@ def test_restart_preserves_user_settings_and_credentials(tmp_path):
 def test_failed_write_does_not_leave_an_existing_config(tmp_path):
     from unittest.mock import patch
 
+    import nanobot.utils.file_io as file_io
     from nanobot.cli.docker_bootstrap import initialize_config
 
     path = tmp_path / "config.json"
-    with patch.object(Path, "replace", side_effect=PermissionError("read-only mount")):
+    with patch.object(file_io, "replace_atomic", side_effect=PermissionError("read-only mount")):
         with pytest.raises(PermissionError, match="read-only mount"):
             initialize_config(path)
     assert not path.exists()
