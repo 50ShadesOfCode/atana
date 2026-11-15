@@ -4,6 +4,8 @@ import uuid
 from contextlib import suppress
 from pathlib import Path
 
+from nanobot.utils.atomic_file import io_path, replace_atomic
+
 
 def ensure_dir(path: Path) -> Path:
     """Ensure directory exists, return it."""
@@ -13,6 +15,7 @@ def ensure_dir(path: Path) -> Path:
 
 def write_bytes_atomic(path: Path, content: bytes) -> None:
     """Replace *path* with *content* without ever exposing a partial file."""
+    path = io_path(path)
     tmp = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
     existing_mode: int | None = None
     with suppress(OSError):
@@ -24,7 +27,7 @@ def write_bytes_atomic(path: Path, content: bytes) -> None:
             f.write(content)
             f.flush()
             os.fsync(f.fileno())
-        tmp.replace(path)
+        replace_atomic(tmp, path)
         with suppress(OSError, NotImplementedError):
             dfd = os.open(path.parent, os.O_RDONLY)
             try:

@@ -474,7 +474,10 @@ describe("MessageBubble", () => {
     expect(quote).toHaveTextContent("selected assistant excerpt");
     expect(quote).not.toHaveAttribute("title");
     expect(screen.queryByText("Quoted context")).not.toBeInTheDocument();
-    expect(screen.getByText("What about this?")).toBeInTheDocument();
+    const messageBubble = screen.getByText("What about this?");
+    expect(messageBubble).toBeInTheDocument();
+    expect(quote).toHaveClass("rounded-floating");
+    expect(messageBubble).toHaveClass("rounded-floating");
 
     rerender(
       <MessageBubble
@@ -1292,7 +1295,7 @@ describe("MessageBubble", () => {
     expect(container.querySelector("h3")).not.toBeInTheDocument();
   });
 
-  it("renders inline file paths as compact file references", async () => {
+  it("keeps complete inline file paths and their preview hints", async () => {
     await import("@/components/MarkdownTextRenderer");
     const message: UIMessage = {
       id: "a-file-path",
@@ -1311,10 +1314,8 @@ describe("MessageBubble", () => {
       expect(references[0].parentElement).toHaveClass("align-baseline");
       expect(references[0].parentElement).toHaveClass("leading-[inherit]");
       expect(references[0]).toHaveClass("items-baseline");
-      expect(references[0]).toHaveTextContent("MarkdownTextRenderer.tsx");
-      expect(references[0]).not.toHaveTextContent("webui/src/components");
-      expect(screen.getByText("index.html")).toBeInTheDocument();
-      expect(references[1]).not.toHaveTextContent("/Users/renxubin");
+      expect(references[0].textContent).toBe("webui/src/components/MarkdownTextRenderer.tsx");
+      expect(references[1].textContent).toBe("/Users/renxubin/.nanobot/workspace/minecraft-fps/index.html");
       expect(references[1]).not.toHaveAttribute("title");
       expect(references[1]).toHaveAttribute(
         "aria-label",

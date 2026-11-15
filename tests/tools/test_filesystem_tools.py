@@ -1,7 +1,10 @@
+import os
 from pathlib import Path
 
 import pytest
 
+import nanobot.utils.file_io as file_io
+from nanobot.agent.tools.apply_patch import ApplyPatchTool
 from nanobot.agent.tools.file_state import file_read_context
 from nanobot.agent.tools.filesystem import (
     EditFileTool,
@@ -9,6 +12,87 @@ from nanobot.agent.tools.filesystem import (
     ReadFileTool,
     WriteFileTool,
 )
+from nanobot.execution.files import WorkspaceFiles
+
+
+@pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="requires a POSIX named pipe")
+@pytest.mark.parametrize("operation", ["write", "patch"])
+async def test_file_mutation_rejects_named_pipe_without_opening_it(tmp_path, monkeypatch, operation):
+    pipe = (tmp_path / "pipe").resolve()
+    os.mkfifo(pipe)
+    open_file = Path.open
+
+    def reject_blocking_open(path, *args, **kwargs):
+        if path == pipe:
+            raise AssertionError("Opening a named pipe can block the agent")
+        return open_file(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", reject_blocking_open)
+    if operation == "write":
+        result = await WriteFileTool(workspace=tmp_path, allowed_dir=tmp_path).execute(
+            path="pipe", content="hello",
+        )
+    else:
+        result = await ApplyPatchTool(workspace=tmp_path, allowed_dir=tmp_path).execute(
+            edits=[{"path": "pipe", "action": "add", "new_text": "hello"}],
+        )
+
+    assert result.is_error
+    assert "Not a regular file: pipe" in result
+
+
+@pytest.mark.skipif(not hasattr(os, "O_NOFOLLOW"), reason="requires no-follow file opens")
+@pytest.mark.parametrize("operation", ["write", "patch"])
+async def test_file_mutation_does_not_follow_a_symlink_swapped_in_after_authorization(
+    tmp_path, monkeypatch, operation,
+):
+    workspace = (tmp_path / "workspace").resolve()
+    workspace.mkdir()
+    inside = workspace / "inside.txt"
+    outside = tmp_path / "private.txt"
+    inside.write_text("before", encoding="utf-8")
+    outside.write_text("private", encoding="utf-8")
+    authorize = WorkspaceFiles.edit_target
+
+    def swap_after_authorize(files, path):
+        target = authorize(files, path)
+        inside.unlink()
+        inside.symlink_to(outside)
+        return target
+
+    monkeypatch.setattr(WorkspaceFiles, "edit_target", swap_after_authorize)
+    if operation == "write":
+        result = await WriteFileTool(workspace=workspace, allowed_dir=workspace).execute(
+            path="inside.txt", content="changed",
+        )
+    else:
+        result = await ApplyPatchTool(workspace=workspace, allowed_dir=workspace).execute(
+            edits=[{"path": "inside.txt", "action": "add", "new_text": "changed"}],
+        )
+
+    assert result.is_error
+    assert outside.read_text(encoding="utf-8") == "private"
+
+
+async def test_exact_edit_grant_does_not_list_sibling_files(tmp_path):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    target = outside / "approved.txt"
+    (outside / "approved-secret.txt").write_text("private", encoding="utf-8")
+    tool = EditFileTool(
+        workspace=workspace, allowed_dir=workspace, extra_write_allowed_files=[target],
+    )
+
+    missing = await tool.execute(path=str(target), old_text="old", new_text="new")
+    assert "File not found" in missing
+    assert "approved-secret.txt" not in missing
+    assert not target.exists()
+
+    created = await tool.execute(path=str(target), old_text="", new_text="approved contents")
+    assert not getattr(created, "is_error", False)
+    assert target.read_text(encoding="utf-8") == "approved contents"
 
 
 @pytest.mark.asyncio
@@ -39,10 +123,10 @@ async def test_failed_write_keeps_the_original_file(tmp_path, monkeypatch, opera
     target = tmp_path / "notes.md"
     target.write_text("original\n", encoding="utf-8")
 
-    def boom(self: Path, other: Path) -> Path:  # noqa: ARG001
+    def boom(source, destination):  # noqa: ARG001
         raise OSError("simulated crash before replace")
 
-    monkeypatch.setattr(Path, "replace", boom)
+    monkeypatch.setattr(file_io, "replace_atomic", boom)
 
     if operation == "write":
         result = await WriteFileTool(workspace=tmp_path).execute(
@@ -362,6 +446,22 @@ class TestListDirTool:
         assert "3 of 10" in result
 
     @pytest.mark.asyncio
+    async def test_recursive_limit_preserves_sorted_prefix_and_exact_total(self, tool, tmp_path):
+        (tmp_path / "z").mkdir()
+        (tmp_path / "z" / "a.txt").touch()
+        (tmp_path / "a").mkdir()
+        (tmp_path / "a" / "z.txt").touch()
+        (tmp_path / "b.txt").touch()
+        (tmp_path / ".git").mkdir()
+        (tmp_path / ".git" / "ignored").touch()
+
+        result = await tool.execute(path=".", recursive=True, max_entries=3)
+
+        assert result.replace("\\", "/").splitlines() == [
+            "a/", "a/z.txt", "b.txt", "", "(truncated, showing first 3 of 5 entries)",
+        ]
+
+    @pytest.mark.asyncio
     async def test_empty_dir(self, tool, tmp_path):
         d = tmp_path / "empty"
         d.mkdir()
@@ -423,7 +523,7 @@ class TestWorkspaceRestriction:
         media_file = media_dir / "photo.txt"
         media_file.write_text("shared media", encoding="utf-8")
 
-        monkeypatch.setattr("nanobot.agent.tools.path_utils.get_media_dir", lambda: media_dir)
+        monkeypatch.setattr("nanobot.config.loader._current_config_path", tmp_path / "config.json")
 
         tool = ReadFileTool(workspace=workspace, allowed_dir=workspace)
         result = await tool.execute(path=str(media_file))
@@ -437,7 +537,7 @@ class TestWorkspaceRestriction:
         media_dir = tmp_path / "media"
         media_dir.mkdir()
 
-        monkeypatch.setattr("nanobot.agent.tools.path_utils.get_media_dir", lambda: media_dir)
+        monkeypatch.setattr("nanobot.config.loader._current_config_path", tmp_path / "config.json")
 
         tool = WriteFileTool(workspace=workspace, allowed_dir=workspace)
         result = await tool.execute(path=str(media_dir / "hack.txt"), content="pwned")

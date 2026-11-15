@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+import nanobot.utils.file_io as file_io
 from nanobot.utils.file_io import write_bytes_atomic
 
 
@@ -22,10 +23,10 @@ def test_write_bytes_atomic_keeps_the_original_when_replace_fails(
     path = tmp_path / "file.bin"
     path.write_bytes(b"old")
 
-    def boom(self: Path, target: Path) -> Path:  # noqa: ARG001
+    def boom(source: Path, destination: Path) -> None:  # noqa: ARG001
         raise OSError("simulated crash before replace")
 
-    monkeypatch.setattr(Path, "replace", boom)
+    monkeypatch.setattr(file_io, "replace_atomic", boom)
     with pytest.raises(OSError, match="simulated crash"):
         write_bytes_atomic(path, b"new")
 

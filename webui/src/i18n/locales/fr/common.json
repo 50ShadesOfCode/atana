@@ -713,7 +713,7 @@
       "previewPlaceholder": "Par où commencer ?",
       "process": "Affichage de l’activité",
       "processHelp": "Choisissez le niveau de détail affiché pendant que nanobot travaille.",
-      "autoHelp": "Affichez la progression en cours et gardez les activités terminées compactes.",
+      "autoHelp": "Repliez les détails par défaut et affichez la dernière activité pendant le traitement.",
       "expandedHelp": "Gardez les détails de l’activité développés par défaut.",
       "summaryHelp": "Affichez les fichiers modifiés et le nombre de lignes.",
       "diffHelp": "Affichez les changements de code directement dans la conversation.",
@@ -830,6 +830,7 @@
       "unixSocket": "Socket Unix",
       "defaultWorkspace": "Espace par défaut",
       "auto": "Automatique",
+      "collapsed": "Replié",
       "expanded": "Développé",
       "default": "Par défaut",
       "summary": "Résumé",
@@ -1066,6 +1067,8 @@
       "contextWindowError": "Saisissez un nombre positif de tokens, par exemple 200k, 1m ou 131072.",
       "maxTokens": "Tokens de sortie max.",
       "temperature": "Température",
+      "imageInput": "Entrée d’images",
+      "imageInputHelp": "Si désactivée, les requêtes contenant des images ignorent ce préréglage.",
       "reasoningEffort": "Effort de raisonnement",
       "convertTitle": "Convertir les réglages",
       "convertHelp": "Convertissez les modèles principal et de secours en préréglages.",
@@ -1847,12 +1850,6 @@
     },
     "loadingConversation": "Chargement de la conversation…",
     "empty": {
-      "greetings": {
-        "workOn": "Sur quoi travaillons-nous ensemble ?",
-        "start": "Par où commence-t-on ?",
-        "build": "Que construisons-nous aujourd'hui ?",
-        "tackle": "Que résout-on ensemble ?"
-      },
       "quickActions": {
         "plan": {
           "title": "Créer un plan",
@@ -1948,8 +1945,11 @@
       "goalStateStrip": "Objectif: {{label}}",
       "goalStateFallback": "Objectif",
       "goalStateExpandAria": "Afficher l’objectif complet",
+      "goalBlocked": "Bloqué",
       "goalStateSheetTitle": "Objectif",
-      "goalStateCloseAria": "Fermer l’objectif",
+      "cancelGoal": "Annuler l’objectif",
+      "cancelGoalFailed": "Échec de l’annulation. Réessayez.",
+      "cancelGoalOffline": "Reconnectez-vous pour annuler l’objectif.",
       "send": "Envoyer le message",
       "stop": "Arrêter la réponse",
       "quotedContext": "Contexte cité",
@@ -2063,10 +2063,6 @@
             "title": "Modèle",
             "description": "Consultez ou changez le préréglage de modèle actuel."
           },
-          "history": {
-            "title": "Historique de discussion",
-            "description": "Affichez les N derniers messages enregistrés."
-          },
           "dream": {
             "title": "Lancer Dream",
             "description": "Organisez la mémoire maintenant."
@@ -2086,6 +2082,10 @@
           "goal": {
             "title": "Objectif long terme",
             "description": "Demandez à l’assistant de poursuivre cet objectif."
+          },
+          "cancel_goal": {
+            "title": "Annuler l’objectif",
+            "description": "Annuler l’objectif actif ou bloqué de cette conversation."
           },
           "trigger": {
             "title": "Déclencheur CLI",
@@ -2107,7 +2107,6 @@
         "details": {
           "goalActive": "L’objectif est en cours",
           "goalReady": "Démarrer un objectif durable",
-          "history": "Afficher les messages récents",
           "stopRunning": "En cours"
         }
       },
@@ -2284,11 +2283,37 @@
       "updatedLongTask": "Tâche longue mise à jour",
       "updateLongTaskFailed": "Impossible de mettre à jour la tâche longue",
       "continuingCommand": "Poursuite de la commande",
+      "waitingCommandResult": "En attente du résultat de la commande",
+      "waitingCommandOutput": "En attente de la sortie de la commande",
+      "sendingCommandInput": "Envoi de l’entrée",
+      "closingCommandInput": "Fermeture de l’entrée de la commande",
+      "sendingClosingInput": "Envoi puis fermeture de l’entrée de la commande",
+      "stoppingCommand": "Arrêt de la commande",
+      "commandStatusUnknown": "État de la commande inconnu",
+      "commandWasRunning": "La commande était toujours en cours d’exécution lors de la dernière vérification",
+      "commandWaitTimedOut": "Délai d’attente dépassé ; la commande était toujours en cours d’exécution lors de la dernière vérification",
+      "commandWasStopping": "La commande était en cours d’arrêt lors de la dernière vérification",
+      "commandCompleted": "Commande terminée",
+      "commandExitFailed": "Échec de la commande (code de sortie {{code}})",
+      "commandExited": "La commande s’est terminée (code de sortie {{code}})",
+      "commandTimedOut": "La commande a dépassé le délai imparti et a été arrêtée",
+      "commandIdleTimedOut": "La commande a été arrêtée après une période sans sortie",
+      "commandCheckedUnknown": "Commande vérifiée ; état inconnu",
+      "stopCommandError": "Impossible d’arrêter la commande",
+      "sendCloseInputError": "Impossible d’envoyer ou de fermer l’entrée de la commande",
+      "sendInputError": "Impossible d’envoyer l’entrée",
+      "closeInputError": "Impossible de fermer l’entrée de la commande",
+      "checkCommandError": "Impossible de vérifier la commande",
+      "sentClosedInput": "Entrée de la commande envoyée et fermée",
+      "sentCommandInput": "Entrée envoyée",
+      "closedCommandInput": "Entrée de la commande fermée",
       "continuedCommand": "Commande poursuivie",
       "continueCommandFailed": "Impossible de poursuivre la commande",
       "checkingRunningCommands": "Vérification des commandes en cours",
       "checkedRunningCommands": "Commandes en cours vérifiées",
       "checkRunningCommandsFailed": "Impossible de vérifier les commandes en cours",
+      "showEarlierCommandChecks": "Afficher les vérifications précédentes des commandes ({{count}})",
+      "hideEarlierCommandChecks": "Masquer les vérifications précédentes des commandes ({{count}})",
       "capturingScreenshot": "Capture d’écran en cours",
       "capturedScreenshot": "Capture d’écran effectuée",
       "captureScreenshotFailed": "Impossible d’effectuer la capture d’écran",

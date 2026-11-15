@@ -210,6 +210,7 @@ export function useModelSettingsActions({
           contextWindowTokens: form.contextWindowTokens,
           temperature: form.temperature,
           reasoningEffort: form.reasoningEffort || null,
+          supportsImages: form.supportsImages,
           api: form.api ?? undefined,
           ...(settings.model_request_overrides_supported ? {
             extraHeaders: form.extraHeaders,
@@ -273,6 +274,8 @@ export function useModelSettingsActions({
           form.temperature !== selectedPreset.temperature ? form.temperature : undefined,
         reasoningEffort:
           reasoningEffort !== selectedPreset.reasoning_effort ? reasoningEffort : undefined,
+        supportsImages: form.supportsImages !== (selectedPreset.supports_images ?? true)
+          ? form.supportsImages : undefined,
         api: modelAPISelection(form.api) !== modelAPISelection(selectedPreset.api)
           ? form.api : undefined,
         ...(settings.model_request_overrides_supported ? {
@@ -337,6 +340,7 @@ export function useModelSettingsActions({
       modelPreset: "",
       provider,
       model: "",
+      supportsImages: true,
       api: null,
       extraHeaders: "",
       extraQuery: "",

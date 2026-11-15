@@ -713,7 +713,7 @@
       "previewPlaceholder": "何から始めましょうか？",
       "process": "処理状況の表示",
       "processHelp": "nanobot の作業中に表示する詳細の量を選びます。",
-      "autoHelp": "作業中は進捗を表示し、完了後はコンパクトにまとめます。",
+      "autoHelp": "詳細は既定で折りたたみ、作業中は最新のアクティビティを表示します。",
       "expandedHelp": "処理の詳細を既定で展開します。",
       "summaryHelp": "変更されたファイルと行数を表示します。",
       "diffHelp": "コードの変更を会話内に直接表示します。",
@@ -830,6 +830,7 @@
       "unixSocket": "Unix ソケット",
       "defaultWorkspace": "既定のワークスペース",
       "auto": "自動",
+      "collapsed": "折りたたむ",
       "expanded": "展開",
       "default": "既定",
       "summary": "概要",
@@ -1066,6 +1067,8 @@
       "contextWindowError": "200k、1m、131072 など、正のトークン数を入力してください。",
       "maxTokens": "最大出力トークン",
       "temperature": "温度",
+      "imageInput": "画像入力",
+      "imageInputHelp": "オフにすると、画像を含むリクエストではこのプリセットをスキップします。",
       "reasoningEffort": "推論の強度",
       "convertTitle": "設定を変換",
       "convertHelp": "主モデルと予備モデルをプリセットに変換します。",
@@ -1847,12 +1850,6 @@
     },
     "loadingConversation": "会話を読み込み中…",
     "empty": {
-      "greetings": {
-        "workOn": "一緒に何に取り組みましょうか？",
-        "start": "今日はどこから始めましょう？",
-        "build": "今日は何を作りましょうか？",
-        "tackle": "一緒に何を解決しましょう？"
-      },
       "quickActions": {
         "plan": {
           "title": "計画を立てる",
@@ -1948,8 +1945,11 @@
       "goalStateStrip": "目標: {{label}}",
       "goalStateFallback": "目標",
       "goalStateExpandAria": "目標の全文を表示",
+      "goalBlocked": "進行不可",
       "goalStateSheetTitle": "目標",
-      "goalStateCloseAria": "目標を閉じる",
+      "cancelGoal": "目標を取り消す",
+      "cancelGoalFailed": "取り消せませんでした。再試行してください。",
+      "cancelGoalOffline": "再接続してから目標を取り消してください。",
       "send": "メッセージを送信",
       "stop": "応答を停止",
       "quotedContext": "引用したコンテキスト",
@@ -2063,10 +2063,6 @@
             "title": "モデル",
             "description": "現在のモデルプリセットを確認・切り替えます。"
           },
-          "history": {
-            "title": "会話の履歴",
-            "description": "保存済みメッセージの直近 N 件を表示します。"
-          },
           "dream": {
             "title": "Dream を実行",
             "description": "メモリーを今すぐ整理します。"
@@ -2086,6 +2082,10 @@
           "goal": {
             "title": "長期目標",
             "description": "アシスタントがこの目標に向けて作業を続けます。"
+          },
+          "cancel_goal": {
+            "title": "目標を取り消す",
+            "description": "このチャットの実行中またはブロック中の目標を取り消します。"
           },
           "trigger": {
             "title": "CLI トリガー",
@@ -2107,7 +2107,6 @@
         "details": {
           "goalActive": "目標が実行中",
           "goalReady": "継続的な目標を開始",
-          "history": "最近のメッセージを表示",
           "stopRunning": "実行中"
         }
       },
@@ -2284,11 +2283,37 @@
       "updatedLongTask": "長期タスクを更新しました",
       "updateLongTaskFailed": "長期タスクを更新できませんでした",
       "continuingCommand": "コマンドを続行中",
+      "waitingCommandResult": "コマンドの結果を待機中",
+      "waitingCommandOutput": "コマンドの出力を待機中",
+      "sendingCommandInput": "入力を送信中",
+      "closingCommandInput": "コマンドの入力を閉じています",
+      "sendingClosingInput": "コマンドの入力を送信して閉じています",
+      "stoppingCommand": "コマンドを停止中",
+      "commandStatusUnknown": "コマンドの状態は不明です",
+      "commandWasRunning": "前回の確認時、コマンドはまだ実行中でした",
+      "commandWaitTimedOut": "待機がタイムアウトしました。前回の確認時、コマンドはまだ実行中でした",
+      "commandWasStopping": "前回の確認時、コマンドは停止処理中でした",
+      "commandCompleted": "コマンドが完了しました",
+      "commandExitFailed": "コマンドが失敗しました（終了コード {{code}}）",
+      "commandExited": "コマンドが終了しました（終了コード {{code}}）",
+      "commandTimedOut": "コマンドがタイムアウトしたため停止しました",
+      "commandIdleTimedOut": "一定時間出力がなかったためコマンドを停止しました",
+      "commandCheckedUnknown": "コマンドを確認しましたが、状態は不明です",
+      "stopCommandError": "コマンドを停止できませんでした",
+      "sendCloseInputError": "コマンドの入力を送信または閉じることができませんでした",
+      "sendInputError": "入力を送信できませんでした",
+      "closeInputError": "コマンドの入力を閉じることができませんでした",
+      "checkCommandError": "コマンドを確認できませんでした",
+      "sentClosedInput": "コマンドの入力を送信して閉じました",
+      "sentCommandInput": "入力を送信しました",
+      "closedCommandInput": "コマンドの入力を閉じました",
       "continuedCommand": "コマンドを続行しました",
       "continueCommandFailed": "コマンドを続行できませんでした",
       "checkingRunningCommands": "実行中のコマンドを確認中",
       "checkedRunningCommands": "実行中のコマンドを確認しました",
       "checkRunningCommandsFailed": "実行中のコマンドを確認できませんでした",
+      "showEarlierCommandChecks": "以前のコマンド確認を表示（{{count}}）",
+      "hideEarlierCommandChecks": "以前のコマンド確認を非表示（{{count}}）",
       "capturingScreenshot": "スクリーンショットを撮影中",
       "capturedScreenshot": "スクリーンショットを撮影しました",
       "captureScreenshotFailed": "スクリーンショットを撮影できませんでした",

@@ -886,6 +886,8 @@
       "contextWindowError": "请输入正数 Token 数量，例如 200k、1m 或 131072。",
       "maxTokens": "输出 Token 上限",
       "temperature": "温度",
+      "imageInput": "图像输入",
+      "imageInputHelp": "关闭后，含图片的请求会跳过此预设。",
       "reasoningEffort": "推理强度",
       "convertTitle": "转换设置",
       "convertHelp": "将主模型和备用模型转为预设",
@@ -954,7 +956,7 @@
       "previewPlaceholder": "接下来，想聊点什么？",
       "process": "过程展示",
       "processHelp": "选择 nanobot 工作时展示多少细节。",
-      "autoHelp": "工作时显示进度，结束后保持简洁。",
+      "autoHelp": "默认收起明细，处理中显示最新一条。",
       "expandedHelp": "默认展开工具活动与子任务详情。",
       "summaryHelp": "显示修改文件和增删行数。",
       "diffHelp": "在对话中直接展示代码差异。",
@@ -1225,6 +1227,7 @@
       "defaultWorkspace": "默认工作区",
       "auto": "自动",
       "default": "默认",
+      "collapsed": "收起",
       "expanded": "展开",
       "summary": "概要",
       "diff": "修改内容",
@@ -2029,12 +2032,6 @@
     },
     "loadingConversation": "正在加载话题…",
     "empty": {
-      "greetings": {
-        "workOn": "我们要一起做点什么？",
-        "start": "今天从哪里开始？",
-        "build": "今天一起构建什么？",
-        "tackle": "我们要一起解决什么？"
-      },
       "quickActions": {
         "plan": {
           "title": "制定计划",
@@ -2130,7 +2127,11 @@
       "goalStateStrip": "目标：{{label}}",
       "goalStateFallback": "目标",
       "goalStateExpandAria": "查看完整目标",
+      "goalBlocked": "已阻塞",
       "goalStateSheetTitle": "目标",
+      "cancelGoal": "取消目标",
+      "cancelGoalFailed": "取消失败，请重试。",
+      "cancelGoalOffline": "请重新连接后取消目标。",
       "send": "发送消息",
       "stop": "停止响应",
       "quotedContext": "引用内容",
@@ -2226,7 +2227,6 @@
         "details": {
           "goalActive": "目标正在运行",
           "goalReady": "开始一个持续目标",
-          "history": "查看最近消息",
           "stopRunning": "正在运行"
         },
         "commands": {
@@ -2254,10 +2254,6 @@
             "title": "模型",
             "description": "查看或切换当前模型预设"
           },
-          "history": {
-            "title": "对话记录",
-            "description": "查看最近 N 条已保存的消息"
-          },
           "dream": {
             "title": "运行 Dream",
             "description": "手动整理记忆"
@@ -2277,6 +2273,10 @@
           "goal": {
             "title": "长期目标",
             "description": "让助手持续推进当前目标"
+          },
+          "cancel_goal": {
+            "title": "取消目标",
+            "description": "取消当前对话中执行或阻塞的目标"
           },
           "trigger": {
             "title": "CLI 触发器",
@@ -2323,7 +2323,6 @@
         "total_too_large": "附件总大小过大，请移除部分文件或使用更小的文件",
         "io": "无法读取该文件"
       },
-      "goalStateCloseAria": "关闭目标",
       "workspace": {
         "accessAria": "工作区访问权限",
         "projectAria": "选择项目",
@@ -2438,11 +2437,37 @@
       "updatedLongTask": "已更新长期任务",
       "updateLongTaskFailed": "无法更新长期任务",
       "continuingCommand": "正在继续命令",
+      "waitingCommandResult": "正在等待命令结果",
+      "waitingCommandOutput": "正在等待命令输出",
+      "sendingCommandInput": "正在发送输入",
+      "closingCommandInput": "正在关闭命令输入",
+      "sendingClosingInput": "正在发送并关闭命令输入",
+      "stoppingCommand": "正在停止命令",
+      "commandStatusUnknown": "命令状态未知",
+      "commandWasRunning": "上次检查时命令仍在运行",
+      "commandWaitTimedOut": "等待超时，上次检查时命令仍在运行",
+      "commandWasStopping": "上次检查时命令正在停止",
+      "commandCompleted": "命令已完成",
+      "commandExitFailed": "命令执行失败（退出码 {{code}}）",
+      "commandExited": "命令已结束（退出码 {{code}}）",
+      "commandTimedOut": "命令超时，已终止",
+      "commandIdleTimedOut": "命令因输出静默超时而终止",
+      "commandCheckedUnknown": "已检查命令，状态未知",
+      "stopCommandError": "停止命令时出错",
+      "sendCloseInputError": "发送或关闭命令输入时出错",
+      "sendInputError": "发送输入时出错",
+      "closeInputError": "关闭命令输入时出错",
+      "checkCommandError": "检查命令时出错",
+      "sentClosedInput": "已发送并关闭命令输入",
+      "sentCommandInput": "已发送输入",
+      "closedCommandInput": "已关闭命令输入",
       "continuedCommand": "已继续命令",
       "continueCommandFailed": "无法继续命令",
       "checkingRunningCommands": "正在检查运行中的命令",
       "checkedRunningCommands": "已检查运行中的命令",
       "checkRunningCommandsFailed": "无法检查运行中的命令",
+      "showEarlierCommandChecks": "展开之前的命令检查（{{count}}）",
+      "hideEarlierCommandChecks": "收起之前的命令检查（{{count}}）",
       "capturingScreenshot": "正在截取屏幕截图",
       "capturedScreenshot": "已截取屏幕截图",
       "captureScreenshotFailed": "无法截取屏幕截图",

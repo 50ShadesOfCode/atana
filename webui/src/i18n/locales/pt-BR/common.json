@@ -706,6 +706,8 @@
       "contextWindowError": "Insira uma quantidade positiva de tokens, como 200k, 1m ou 131072.",
       "maxTokens": "Máx. de tokens de saída",
       "temperature": "Temperatura",
+      "imageInput": "Entrada de imagens",
+      "imageInputHelp": "Quando desativada, solicitações com imagens ignoram esta predefinição.",
       "reasoningEffort": "Esforço de raciocínio",
       "convertTitle": "Converter ajustes",
       "convertHelp": "Converta os modelos principal e alternativo em presets.",
@@ -774,7 +776,7 @@
       "previewPlaceholder": "Por onde começamos?",
       "process": "Exibição de atividade",
       "processHelp": "Escolha o nível de detalhe exibido enquanto o nanobot trabalha.",
-      "autoHelp": "Mostre o progresso durante o trabalho e uma visão compacta ao terminar.",
+      "autoHelp": "Mantenha os detalhes recolhidos por padrão e mostre a atividade mais recente durante o trabalho.",
       "expandedHelp": "Mantenha os detalhes de atividade expandidos por padrão.",
       "summaryHelp": "Mostre os arquivos alterados e a contagem de linhas.",
       "diffHelp": "Mostre as alterações de código diretamente na conversa.",
@@ -1044,6 +1046,7 @@
       "unixSocket": "Socket Unix",
       "defaultWorkspace": "Espaço de trabalho padrão",
       "auto": "Automático",
+      "collapsed": "Recolhido",
       "expanded": "Expandido",
       "default": "Padrão",
       "summary": "Resumo",
@@ -1849,12 +1852,6 @@
     },
     "loadingConversation": "Carregando conversa…",
     "empty": {
-      "greetings": {
-        "workOn": "Em que vamos trabalhar?",
-        "start": "Por onde começamos?",
-        "build": "O que vamos construir hoje?",
-        "tackle": "O que vamos resolver juntos?"
-      },
       "quickActions": {
         "plan": {
           "title": "Criar um plano",
@@ -1950,8 +1947,11 @@
       "goalStateStrip": "Objetivo: {{label}}",
       "goalStateFallback": "Objetivo",
       "goalStateExpandAria": "Mostrar objetivo completo",
+      "goalBlocked": "Bloqueado",
       "goalStateSheetTitle": "Objetivo",
-      "goalStateCloseAria": "Fechar objetivo",
+      "cancelGoal": "Cancelar objetivo",
+      "cancelGoalFailed": "Não foi possível cancelar. Tente novamente.",
+      "cancelGoalOffline": "Reconecte-se para cancelar o objetivo.",
       "send": "Enviar mensagem",
       "stop": "Parar resposta",
       "quotedContext": "Contexto citado",
@@ -2047,7 +2047,6 @@
         "details": {
           "goalActive": "Objetivo em execução",
           "goalReady": "Iniciar um objetivo sustentado",
-          "history": "Mostrar mensagens recentes",
           "stopRunning": "Executando agora"
         },
         "commands": {
@@ -2075,10 +2074,6 @@
             "title": "Modelo",
             "description": "Veja ou troque o preset de modelo atual."
           },
-          "history": {
-            "title": "Histórico da conversa",
-            "description": "Mostre as últimas N mensagens salvas."
-          },
           "dream": {
             "title": "Executar Dream",
             "description": "Organize a memória agora."
@@ -2098,6 +2093,10 @@
           "goal": {
             "title": "Objetivo de longa duração",
             "description": "Peça ao assistente para continuar trabalhando neste objetivo."
+          },
+          "cancel_goal": {
+            "title": "Cancelar objetivo",
+            "description": "Cancela o objetivo ativo ou bloqueado desta conversa."
           },
           "trigger": {
             "title": "Gatilho CLI",
@@ -2259,11 +2258,37 @@
       "updatedLongTask": "Tarefa longa atualizada",
       "updateLongTaskFailed": "Não foi possível atualizar a tarefa longa",
       "continuingCommand": "Continuando comando",
+      "waitingCommandResult": "Aguardando resultado do comando",
+      "waitingCommandOutput": "Aguardando saída do comando",
+      "sendingCommandInput": "Enviando entrada",
+      "closingCommandInput": "Fechando entrada do comando",
+      "sendingClosingInput": "Enviando e fechando a entrada do comando",
+      "stoppingCommand": "Interrompendo comando",
+      "commandStatusUnknown": "Status do comando desconhecido",
+      "commandWasRunning": "O comando ainda estava em execução na última verificação",
+      "commandWaitTimedOut": "O tempo de espera se esgotou; o comando ainda estava em execução na última verificação",
+      "commandWasStopping": "O comando estava sendo interrompido na última verificação",
+      "commandCompleted": "Comando concluído",
+      "commandExitFailed": "Falha no comando (código de saída {{code}})",
+      "commandExited": "O comando terminou (código de saída {{code}})",
+      "commandTimedOut": "O comando excedeu o tempo limite e foi interrompido",
+      "commandIdleTimedOut": "O comando foi interrompido após um período sem saída",
+      "commandCheckedUnknown": "Comando verificado; status desconhecido",
+      "stopCommandError": "Não foi possível interromper o comando",
+      "sendCloseInputError": "Não foi possível enviar ou fechar a entrada do comando",
+      "sendInputError": "Não foi possível enviar a entrada",
+      "closeInputError": "Não foi possível fechar a entrada do comando",
+      "checkCommandError": "Não foi possível verificar o comando",
+      "sentClosedInput": "Entrada do comando enviada e fechada",
+      "sentCommandInput": "Entrada enviada",
+      "closedCommandInput": "Entrada do comando fechada",
       "continuedCommand": "Comando continuado",
       "continueCommandFailed": "Não foi possível continuar o comando",
       "checkingRunningCommands": "Verificando comandos em execução",
       "checkedRunningCommands": "Comandos em execução verificados",
       "checkRunningCommandsFailed": "Não foi possível verificar os comandos em execução",
+      "showEarlierCommandChecks": "Mostrar verificações anteriores de comandos ({{count}})",
+      "hideEarlierCommandChecks": "Ocultar verificações anteriores de comandos ({{count}})",
       "capturingScreenshot": "Capturando tela",
       "capturedScreenshot": "Captura de tela realizada",
       "captureScreenshotFailed": "Não foi possível capturar a tela",

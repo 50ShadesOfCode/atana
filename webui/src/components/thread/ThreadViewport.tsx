@@ -577,9 +577,12 @@ export const ThreadViewport = forwardRef<ThreadViewportHandle, ThreadViewportPro
       - (historySlotRef.current ? HISTORY_HOLD_PX : 0);
     const delta = nextOffset - anchor.offsetTop;
     if (Math.abs(delta) < 0.5) return true;
-    const nextTop = Math.min(maxScrollTop, Math.max(0, scroller.scrollTop + delta));
+    const requestedTop = scroller.scrollTop + delta;
+    const nextTop = Math.min(maxScrollTop, Math.max(0, requestedTop));
     threadMotionRef.current?.jumpTo(nextTop);
     anchor.scrollTop = scroller.scrollTop;
+    // A clamped layout is the new reading position, not space owed by a later prepend.
+    anchor.offsetTop += requestedTop - nextTop;
     return true;
   }, [captureHistoryScrollAnchor]);
 
@@ -1330,10 +1333,11 @@ export const ThreadViewport = forwardRef<ThreadViewportHandle, ThreadViewportPro
               ref={emptyStateRef}
               data-testid="thread-empty-region"
               className={cn(
-                "row-start-1 min-h-0 min-w-0 w-full",
+                "relative row-start-1 min-h-0 min-w-0 w-full [container-type:inline-size]",
                 initialLoading
                   ? "overflow-hidden"
                   : cn("flex items-center justify-center", hasComposer && "sm:items-end sm:pb-8"),
+                "thread-empty-region",
               )}
             >
               {emptyState}

@@ -713,7 +713,7 @@
       "previewPlaceholder": "Dari mana kita mulai?",
       "process": "Tampilan aktivitas",
       "processHelp": "Pilih seberapa banyak detail yang ditampilkan saat nanobot bekerja.",
-      "autoHelp": "Tampilkan progres saat bekerja dan tampilan ringkas setelah selesai.",
+      "autoHelp": "Ringkas detail secara default dan tampilkan aktivitas terbaru saat bekerja.",
       "expandedHelp": "Perluas detail aktivitas secara default.",
       "summaryHelp": "Tampilkan berkas yang diubah dan jumlah baris.",
       "diffHelp": "Tampilkan perubahan kode langsung dalam percakapan.",
@@ -830,6 +830,7 @@
       "unixSocket": "Soket Unix",
       "defaultWorkspace": "Ruang kerja bawaan",
       "auto": "Otomatis",
+      "collapsed": "Diringkas",
       "expanded": "Diperluas",
       "default": "Bawaan",
       "summary": "Ringkasan",
@@ -1066,6 +1067,8 @@
       "contextWindowError": "Masukkan jumlah token positif, seperti 200k, 1m, atau 131072.",
       "maxTokens": "Maks. token keluaran",
       "temperature": "Temperatur",
+      "imageInput": "Input gambar",
+      "imageInputHelp": "Jika dinonaktifkan, permintaan berisi gambar akan melewati preset ini.",
       "reasoningEffort": "Upaya penalaran",
       "convertTitle": "Konversi pengaturan",
       "convertHelp": "Ubah model utama dan cadangan menjadi preset.",
@@ -1847,12 +1850,6 @@
     },
     "loadingConversation": "Memuat percakapan…",
     "empty": {
-      "greetings": {
-        "workOn": "Apa yang kita kerjakan bersama?",
-        "start": "Kita mulai dari mana?",
-        "build": "Apa yang kita bangun hari ini?",
-        "tackle": "Apa yang kita selesaikan bersama?"
-      },
       "quickActions": {
         "plan": {
           "title": "Buat rencana",
@@ -1948,8 +1945,11 @@
       "goalStateStrip": "Tujuan: {{label}}",
       "goalStateFallback": "Tujuan",
       "goalStateExpandAria": "Lihat tujuan lengkap",
+      "goalBlocked": "Terhambat",
       "goalStateSheetTitle": "Tujuan",
-      "goalStateCloseAria": "Tutup tujuan",
+      "cancelGoal": "Batalkan tujuan",
+      "cancelGoalFailed": "Tujuan gagal dibatalkan. Coba lagi.",
+      "cancelGoalOffline": "Hubungkan kembali untuk membatalkan tujuan.",
       "send": "Kirim pesan",
       "stop": "Hentikan respons",
       "quotedContext": "Konteks kutipan",
@@ -2063,10 +2063,6 @@
             "title": "Model",
             "description": "Lihat atau ganti preset model saat ini."
           },
-          "history": {
-            "title": "Riwayat chat",
-            "description": "Tampilkan N pesan terakhir yang tersimpan."
-          },
           "dream": {
             "title": "Jalankan Dream",
             "description": "Atur memori sekarang."
@@ -2086,6 +2082,10 @@
           "goal": {
             "title": "Tujuan jangka panjang",
             "description": "Minta asisten terus mengerjakan tujuan ini."
+          },
+          "cancel_goal": {
+            "title": "Batalkan tujuan",
+            "description": "Batalkan tujuan aktif atau terblokir di chat ini."
           },
           "trigger": {
             "title": "Pemicu CLI",
@@ -2107,7 +2107,6 @@
         "details": {
           "goalActive": "Tujuan sedang berjalan",
           "goalReady": "Mulai tujuan berkelanjutan",
-          "history": "Tampilkan pesan terbaru",
           "stopRunning": "Sedang berjalan"
         }
       },
@@ -2284,11 +2283,37 @@
       "updatedLongTask": "Tugas panjang diperbarui",
       "updateLongTaskFailed": "Tidak dapat memperbarui tugas panjang",
       "continuingCommand": "Melanjutkan perintah",
+      "waitingCommandResult": "Menunggu hasil perintah",
+      "waitingCommandOutput": "Menunggu keluaran perintah",
+      "sendingCommandInput": "Mengirim masukan",
+      "closingCommandInput": "Menutup masukan perintah",
+      "sendingClosingInput": "Mengirim dan menutup masukan perintah",
+      "stoppingCommand": "Menghentikan perintah",
+      "commandStatusUnknown": "Status perintah tidak diketahui",
+      "commandWasRunning": "Perintah masih berjalan pada pemeriksaan terakhir",
+      "commandWaitTimedOut": "Waktu tunggu habis; perintah masih berjalan pada pemeriksaan terakhir",
+      "commandWasStopping": "Perintah sedang dihentikan pada pemeriksaan terakhir",
+      "commandCompleted": "Perintah selesai",
+      "commandExitFailed": "Perintah gagal (kode keluar {{code}})",
+      "commandExited": "Perintah telah berakhir (kode keluar {{code}})",
+      "commandTimedOut": "Perintah melampaui batas waktu dan dihentikan",
+      "commandIdleTimedOut": "Perintah dihentikan setelah tidak ada keluaran selama beberapa waktu",
+      "commandCheckedUnknown": "Perintah diperiksa; status tidak diketahui",
+      "stopCommandError": "Tidak dapat menghentikan perintah",
+      "sendCloseInputError": "Tidak dapat mengirim atau menutup masukan perintah",
+      "sendInputError": "Tidak dapat mengirim masukan",
+      "closeInputError": "Tidak dapat menutup masukan perintah",
+      "checkCommandError": "Tidak dapat memeriksa perintah",
+      "sentClosedInput": "Masukan perintah telah dikirim dan ditutup",
+      "sentCommandInput": "Masukan terkirim",
+      "closedCommandInput": "Masukan perintah ditutup",
       "continuedCommand": "Perintah dilanjutkan",
       "continueCommandFailed": "Tidak dapat melanjutkan perintah",
       "checkingRunningCommands": "Memeriksa perintah yang berjalan",
       "checkedRunningCommands": "Perintah yang berjalan diperiksa",
       "checkRunningCommandsFailed": "Tidak dapat memeriksa perintah yang berjalan",
+      "showEarlierCommandChecks": "Tampilkan pemeriksaan perintah sebelumnya ({{count}})",
+      "hideEarlierCommandChecks": "Sembunyikan pemeriksaan perintah sebelumnya ({{count}})",
       "capturingScreenshot": "Mengambil tangkapan layar",
       "capturedScreenshot": "Tangkapan layar diambil",
       "captureScreenshotFailed": "Tidak dapat mengambil tangkapan layar",

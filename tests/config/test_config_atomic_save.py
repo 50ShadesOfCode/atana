@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+import nanobot.utils.file_io as file_io
 from nanobot.config.loader import load_config, resolve_config_env_vars, save_config
 from nanobot.config.schema import Config
 
@@ -63,10 +64,10 @@ def test_save_config_preserves_existing_file_when_write_fails(
     save_config(Config(), path)
     before = path.read_text(encoding="utf-8")
 
-    def boom(self: Path, target: Path) -> Path:  # noqa: ARG001
+    def boom(source: Path, destination: Path) -> None:  # noqa: ARG001
         raise OSError("simulated crash before replace")
 
-    monkeypatch.setattr(Path, "replace", boom)
+    monkeypatch.setattr(file_io, "replace_atomic", boom)
     with pytest.raises(OSError, match="simulated crash"):
         save_config(Config(), path)
 

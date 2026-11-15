@@ -713,7 +713,7 @@
       "previewPlaceholder": "接下來，想聊點什麼？",
       "process": "過程展示",
       "processHelp": "選擇 nanobot 工作時展示多少細節。",
-      "autoHelp": "工作時顯示進度，結束後保持簡潔。",
+      "autoHelp": "預設收合明細，處理中顯示最新一筆。",
       "expandedHelp": "預設展開工具活動與子任務詳情。",
       "summaryHelp": "顯示修改檔案和增刪行數。",
       "diffHelp": "在對話中直接展示程式碼差異。",
@@ -830,6 +830,7 @@
       "unixSocket": "Unix 通訊端",
       "defaultWorkspace": "預設工作區",
       "auto": "自動",
+      "collapsed": "收合",
       "expanded": "展開",
       "default": "預設",
       "summary": "概要",
@@ -1066,6 +1067,8 @@
       "contextWindowError": "請輸入正數 Token 數量，例如 200k、1m 或 131072。",
       "maxTokens": "輸出 Token 上限",
       "temperature": "溫度",
+      "imageInput": "圖像輸入",
+      "imageInputHelp": "關閉後，含圖片的請求會略過此預設。",
       "reasoningEffort": "推理強度",
       "convertTitle": "轉換設定",
       "convertHelp": "將主模型和備用模型轉為預設",
@@ -1847,12 +1850,6 @@
     },
     "loadingConversation": "正在載入話題…",
     "empty": {
-      "greetings": {
-        "workOn": "我們要一起做點什麼？",
-        "start": "今天從哪裡開始？",
-        "build": "今天要一起打造什麼？",
-        "tackle": "我們要一起解決什麼？"
-      },
       "quickActions": {
         "plan": {
           "title": "制定計劃",
@@ -1948,8 +1945,11 @@
       "goalStateStrip": "目標：{{label}}",
       "goalStateFallback": "目標",
       "goalStateExpandAria": "檢視完整目標",
+      "goalBlocked": "已受阻",
       "goalStateSheetTitle": "目標",
-      "goalStateCloseAria": "關閉目標",
+      "cancelGoal": "取消目標",
+      "cancelGoalFailed": "取消失敗，請重試。",
+      "cancelGoalOffline": "請重新連線後取消目標。",
       "send": "送出訊息",
       "stop": "停止回覆",
       "quotedContext": "引用內容",
@@ -2063,10 +2063,6 @@
             "title": "模型",
             "description": "檢視或切換當前模型預設"
           },
-          "history": {
-            "title": "對話記錄",
-            "description": "檢視最近 N 條已儲存的訊息"
-          },
           "dream": {
             "title": "執行 Dream",
             "description": "手動整理記憶"
@@ -2086,6 +2082,10 @@
           "goal": {
             "title": "長期目標",
             "description": "讓助手持續推進當前目標"
+          },
+          "cancel_goal": {
+            "title": "取消目標",
+            "description": "取消目前對話中執行或受阻的目標"
           },
           "trigger": {
             "title": "CLI 觸發器",
@@ -2107,7 +2107,6 @@
         "details": {
           "goalActive": "目標正在執行",
           "goalReady": "開始一個持續目標",
-          "history": "檢視最近訊息",
           "stopRunning": "正在執行"
         }
       },
@@ -2283,11 +2282,37 @@
       "updatedLongTask": "已更新長期任務",
       "updateLongTaskFailed": "無法更新長期任務",
       "continuingCommand": "正在繼續命令",
+      "waitingCommandResult": "正在等待命令結果",
+      "waitingCommandOutput": "正在等待命令輸出",
+      "sendingCommandInput": "正在傳送輸入",
+      "closingCommandInput": "正在關閉命令輸入",
+      "sendingClosingInput": "正在傳送並關閉命令輸入",
+      "stoppingCommand": "正在停止命令",
+      "commandStatusUnknown": "命令狀態未知",
+      "commandWasRunning": "上次檢查時命令仍在執行",
+      "commandWaitTimedOut": "等待逾時，上次檢查時命令仍在執行",
+      "commandWasStopping": "上次檢查時命令正在停止",
+      "commandCompleted": "命令已完成",
+      "commandExitFailed": "命令執行失敗（結束代碼 {{code}}）",
+      "commandExited": "命令已結束（結束代碼 {{code}}）",
+      "commandTimedOut": "命令逾時，已終止",
+      "commandIdleTimedOut": "命令因長時間沒有輸出而終止",
+      "commandCheckedUnknown": "已檢查命令，狀態未知",
+      "stopCommandError": "無法停止命令",
+      "sendCloseInputError": "無法傳送或關閉命令輸入",
+      "sendInputError": "無法傳送輸入",
+      "closeInputError": "無法關閉命令輸入",
+      "checkCommandError": "無法檢查命令",
+      "sentClosedInput": "已傳送並關閉命令輸入",
+      "sentCommandInput": "已傳送輸入",
+      "closedCommandInput": "已關閉命令輸入",
       "continuedCommand": "已繼續命令",
       "continueCommandFailed": "無法繼續命令",
       "checkingRunningCommands": "正在檢查執行中的命令",
       "checkedRunningCommands": "已檢查執行中的命令",
       "checkRunningCommandsFailed": "無法檢查執行中的命令",
+      "showEarlierCommandChecks": "展開先前的命令檢查（{{count}}）",
+      "hideEarlierCommandChecks": "收合先前的命令檢查（{{count}}）",
       "capturingScreenshot": "正在擷取螢幕截圖",
       "capturedScreenshot": "已擷取螢幕截圖",
       "captureScreenshotFailed": "無法擷取螢幕截圖",

@@ -53,6 +53,17 @@ Push over SSH (`origin` is `git@github.com:50ShadesOfCode/atana.git`). The `gh` 
 
 Fork-only files (no upstream counterpart): `webui/src/components/thread/useModelCatalog.ts`, `tests/agent/test_session_model_selection.py`, `tests/session/test_model_selection_metadata.py`.
 
+### Hardening paths (446eb9356)
+
+- `nanobot/utils/file_io.py` — `write_bytes_atomic`; `write_text_atomic` delegates to it, so every save publishes a complete file
+- `nanobot/execution/files.py` — `_write_regular_file` refuses a swapped-in symlink or special file, then writes through `write_bytes_atomic`
+- `nanobot/config/loader.py`, `nanobot/cron/service.py`, `nanobot/llm_usage/store.py`, `nanobot/session/{manager,sqlite_store,webui_turns}.py`, `nanobot/update_fallback.py`, `nanobot/utils/{query_params,run_records}.py`
+- `nanobot/providers/base.py` — retry and response-source hardening
+- `nanobot/webui/{gateway_tokens,http_utils,outbound_delivery,session_automations,settings_contracts,ws_http}.py`, `nanobot/channels/connect.py`
+- `conftest.py`, `pyproject.toml`
+
+`nanobot/agent/tools/filesystem.py` is no longer edited by the fork: upstream moved writes to `nanobot/execution/files.py`, which now carries the atomic-write seam.
+
 ## Releases
 
 Upstream tags are kept as they are. Fork releases are tagged `dev-YYYY.MM.DD` from `dev`.

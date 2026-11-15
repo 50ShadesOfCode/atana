@@ -713,7 +713,7 @@
       "previewPlaceholder": "Chúng ta nên bắt đầu từ đâu?",
       "process": "Hiển thị hoạt động",
       "processHelp": "Chọn mức độ chi tiết hiển thị khi nanobot làm việc.",
-      "autoHelp": "Hiển thị tiến độ khi đang làm việc và thu gọn khi hoàn tất.",
+      "autoHelp": "Mặc định thu gọn chi tiết và chỉ hiện hoạt động mới nhất khi đang làm việc.",
       "expandedHelp": "Mặc định mở rộng chi tiết hoạt động.",
       "summaryHelp": "Hiển thị các tệp đã thay đổi và số dòng.",
       "diffHelp": "Hiển thị thay đổi mã ngay trong cuộc trò chuyện.",
@@ -830,6 +830,7 @@
       "unixSocket": "Socket Unix",
       "defaultWorkspace": "Không gian làm việc mặc định",
       "auto": "Tự động",
+      "collapsed": "Thu gọn",
       "expanded": "Mở rộng",
       "default": "Mặc định",
       "summary": "Tóm tắt",
@@ -1066,6 +1067,8 @@
       "contextWindowError": "Nhập số lượng token dương, chẳng hạn 200k, 1m hoặc 131072.",
       "maxTokens": "Token đầu ra tối đa",
       "temperature": "Nhiệt độ",
+      "imageInput": "Đầu vào hình ảnh",
+      "imageInputHelp": "Khi tắt, yêu cầu chứa hình ảnh sẽ bỏ qua cấu hình này.",
       "reasoningEffort": "Mức suy luận",
       "convertTitle": "Chuyển thiết lập",
       "convertHelp": "Chuyển mô hình chính và dự phòng thành bộ thiết lập.",
@@ -1847,12 +1850,6 @@
     },
     "loadingConversation": "Đang tải cuộc trò chuyện…",
     "empty": {
-      "greetings": {
-        "workOn": "Mình cùng làm gì tiếp?",
-        "start": "Hôm nay bắt đầu từ đâu?",
-        "build": "Hôm nay mình xây dựng gì?",
-        "tackle": "Mình cùng xử lý việc gì?"
-      },
       "quickActions": {
         "plan": {
           "title": "Lập kế hoạch",
@@ -1948,8 +1945,11 @@
       "goalStateStrip": "Mục tiêu: {{label}}",
       "goalStateFallback": "Mục tiêu",
       "goalStateExpandAria": "Xem đầy đủ mục tiêu",
+      "goalBlocked": "Bị chặn",
       "goalStateSheetTitle": "Mục tiêu",
-      "goalStateCloseAria": "Đóng mục tiêu",
+      "cancelGoal": "Hủy mục tiêu",
+      "cancelGoalFailed": "Không thể hủy mục tiêu. Hãy thử lại.",
+      "cancelGoalOffline": "Kết nối lại để hủy mục tiêu.",
       "send": "Gửi tin nhắn",
       "stop": "Dừng phản hồi",
       "quotedContext": "Ngữ cảnh được trích dẫn",
@@ -2063,10 +2063,6 @@
             "title": "Mô hình",
             "description": "Xem hoặc đổi bộ thiết lập mô hình hiện tại."
           },
-          "history": {
-            "title": "Lịch sử trò chuyện",
-            "description": "Hiện N tin nhắn đã lưu gần nhất."
-          },
           "dream": {
             "title": "Chạy Dream",
             "description": "Sắp xếp bộ nhớ ngay."
@@ -2086,6 +2082,10 @@
           "goal": {
             "title": "Mục tiêu dài hạn",
             "description": "Để trợ lý tiếp tục làm việc hướng đến mục tiêu này."
+          },
+          "cancel_goal": {
+            "title": "Hủy mục tiêu",
+            "description": "Hủy mục tiêu đang chạy hoặc bị chặn trong cuộc trò chuyện này."
           },
           "trigger": {
             "title": "Kích hoạt CLI",
@@ -2107,7 +2107,6 @@
         "details": {
           "goalActive": "Mục tiêu đang chạy",
           "goalReady": "Bắt đầu mục tiêu duy trì",
-          "history": "Hiển thị tin nhắn gần đây",
           "stopRunning": "Đang chạy"
         }
       },
@@ -2284,11 +2283,37 @@
       "updatedLongTask": "Đã cập nhật tác vụ dài",
       "updateLongTaskFailed": "Không thể cập nhật tác vụ dài",
       "continuingCommand": "Đang tiếp tục lệnh",
+      "waitingCommandResult": "Đang chờ kết quả lệnh",
+      "waitingCommandOutput": "Đang chờ đầu ra của lệnh",
+      "sendingCommandInput": "Đang gửi dữ liệu đầu vào",
+      "closingCommandInput": "Đang đóng đầu vào của lệnh",
+      "sendingClosingInput": "Đang gửi và đóng đầu vào của lệnh",
+      "stoppingCommand": "Đang dừng lệnh",
+      "commandStatusUnknown": "Không rõ trạng thái lệnh",
+      "commandWasRunning": "Lệnh vẫn đang chạy tại lần kiểm tra gần nhất",
+      "commandWaitTimedOut": "Hết thời gian chờ; lệnh vẫn đang chạy tại lần kiểm tra gần nhất",
+      "commandWasStopping": "Tại lần kiểm tra gần nhất, lệnh đang trong quá trình dừng",
+      "commandCompleted": "Lệnh đã hoàn tất",
+      "commandExitFailed": "Lệnh thất bại (mã thoát {{code}})",
+      "commandExited": "Lệnh đã kết thúc (mã thoát {{code}})",
+      "commandTimedOut": "Lệnh đã bị dừng do hết thời gian",
+      "commandIdleTimedOut": "Lệnh bị dừng sau một khoảng thời gian không có đầu ra",
+      "commandCheckedUnknown": "Đã kiểm tra lệnh; không rõ trạng thái",
+      "stopCommandError": "Không thể dừng lệnh",
+      "sendCloseInputError": "Không thể gửi hoặc đóng đầu vào của lệnh",
+      "sendInputError": "Không thể gửi dữ liệu đầu vào",
+      "closeInputError": "Không thể đóng đầu vào của lệnh",
+      "checkCommandError": "Không thể kiểm tra lệnh",
+      "sentClosedInput": "Đã gửi và đóng đầu vào của lệnh",
+      "sentCommandInput": "Đã gửi dữ liệu đầu vào",
+      "closedCommandInput": "Đã đóng đầu vào của lệnh",
       "continuedCommand": "Đã tiếp tục lệnh",
       "continueCommandFailed": "Không thể tiếp tục lệnh",
       "checkingRunningCommands": "Đang kiểm tra lệnh đang chạy",
       "checkedRunningCommands": "Đã kiểm tra lệnh đang chạy",
       "checkRunningCommandsFailed": "Không thể kiểm tra lệnh đang chạy",
+      "showEarlierCommandChecks": "Hiển thị các lần kiểm tra lệnh trước đó ({{count}})",
+      "hideEarlierCommandChecks": "Ẩn các lần kiểm tra lệnh trước đó ({{count}})",
       "capturingScreenshot": "Đang chụp màn hình",
       "capturedScreenshot": "Đã chụp màn hình",
       "captureScreenshotFailed": "Không thể chụp màn hình",

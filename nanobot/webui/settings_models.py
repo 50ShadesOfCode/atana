@@ -321,7 +321,7 @@ def resolve_settings_provider(
     if spec is not None:
         provider_config = getattr(config.providers, spec.name, None)
         if isinstance(provider_config, ProviderConfig):
-            return spec, spec.name, provider_config
+            return spec.for_connection(provider_config), spec.name, provider_config
         return None
 
     normalized = provider_name.replace("-", "_")
@@ -339,7 +339,7 @@ def resolve_settings_provider(
     return None
 
 
-def _provider_advanced_field_names(name: str, spec: Any) -> list[str]:
+def _provider_advanced_field_names(spec: ProviderSpec) -> list[str]:
     fields: list[str] = []
     if spec.backend in {"openai_compat", "anthropic"}:
         fields.append("extra_headers")
@@ -351,7 +351,7 @@ def _provider_advanced_field_names(name: str, spec: Any) -> list[str]:
         fields.append("use_proxy")
     if spec.backend == "bedrock":
         fields.extend(("region", "profile"))
-    if find_by_name(name) is None:
+    if spec.is_named_custom:
         fields.append("thinking_style")
     return fields
 
@@ -363,7 +363,6 @@ def _provider_settings_row(
     oauth_status_reader: OAuthStatusReader,
 ) -> dict[str, Any]:
     oauth_status = oauth_status_reader(spec) if spec.is_oauth else None
-    is_custom = find_by_name(name) is None
     request_apis = (
         provider_config.api.supported_apis
         if provider_config.api is not None and spec.is_direct else spec.request_apis
@@ -371,7 +370,7 @@ def _provider_settings_row(
     row = {
         "name": name,
         "label": spec.label,
-        "is_custom": is_custom,
+        "is_custom": spec.is_named_custom,
         "configured": (
             bool(oauth_status["configured"])
             if oauth_status is not None
@@ -389,7 +388,7 @@ def _provider_settings_row(
         "api": provider_config.api.model_dump(mode="json") if provider_config.api else None,
         "provider_api_configurable": spec.provider_api_configurable,
         "model_api_configurable": len(request_apis) > 1,
-        "advanced_fields": _provider_advanced_field_names(name, spec),
+        "advanced_fields": _provider_advanced_field_names(spec),
         "extra_headers": request_settings.redact_request_secrets(provider_config.extra_headers),
         "extra_body": request_settings.redact_request_secrets(provider_config.extra_body),
         "extra_query": request_settings.redact_request_secrets(provider_config.extra_query),
@@ -434,8 +433,10 @@ def _provider_settings_rows(
         provider_config = getattr(config.providers, chosen.name, None)
         if provider_config is None:
             continue
-        row = _provider_settings_row(chosen.name, chosen, provider_config, oauth_status)
-        row["label"] = canonical.label
+        spec = chosen.for_connection(provider_config)
+        row = _provider_settings_row(chosen.name, spec, provider_config, oauth_status)
+        if not spec.is_named_custom:
+            row["label"] = canonical.label
         rows.append(row)
     return rows
 
@@ -900,8 +901,12 @@ def _provider_display_name_exists(
     exclude_key: str | None = None,
 ) -> bool:
     normalized = display_name.strip().casefold()
-    if any(spec.label.strip().casefold() == normalized for spec in PROVIDERS):
-        return True
+    for base_spec in PROVIDERS:
+        if base_spec.name == exclude_key:
+            continue
+        provider_config = getattr(config.providers, base_spec.name)
+        if base_spec.for_connection(provider_config).label.strip().casefold() == normalized:
+            return True
     for provider_key, provider_config in _dynamic_provider_items(config):
         if provider_key == exclude_key:
             continue
@@ -1104,6 +1109,7 @@ def model_settings_payload(
             "max_tokens": defaults.max_tokens,
             "context_window_tokens": defaults.context_window_tokens,
             "temperature": defaults.temperature,
+            "supports_images": defaults.supports_images,
             "reasoning_effort": defaults.reasoning_effort,
             "api": defaults.api.model_dump(mode="json") if defaults.api is not None else None,
             "reasoning_effort_values": reasoning_effort_values_for(
@@ -1132,6 +1138,7 @@ def model_settings_payload(
                 "max_tokens": preset.max_tokens,
                 "context_window_tokens": preset.context_window_tokens,
                 "temperature": preset.temperature,
+                "supports_images": preset.supports_images,
                 "reasoning_effort": preset.reasoning_effort,
                 "api": preset.api.model_dump(mode="json") if preset.api is not None else None,
                 **{
@@ -1158,6 +1165,7 @@ def model_settings_payload(
             "max_tokens": effective_preset.max_tokens,
             "context_window_tokens": effective_preset.context_window_tokens,
             "temperature": effective_preset.temperature,
+            "supports_images": effective_preset.supports_images,
             "reasoning_effort": effective_preset.reasoning_effort,
             "api": (
                 effective_preset.api.model_dump(mode="json")
@@ -1349,6 +1357,9 @@ def create_model_configuration(
         ),
         temperature=temperature if temperature is not None else base.temperature,
         reasoning_effort=reasoning_effort,
+        supports_images=parse_bool(
+            query_first_alias(query, "supports_images", "supportsImages") or "true", "supports_images",
+        ),
         api=_parse_preset_api(config, model, provider, query_first(query, "api")),
     )
     config.model_presets[name] = _preset_with_request_updates(config, candidate, query)
@@ -1437,6 +1448,13 @@ def update_model_configuration(
         ).strip() or None
         if preset.reasoning_effort != reasoning_effort:
             preset.reasoning_effort = reasoning_effort
+            changed = True
+    if "supports_images" in query or "supportsImages" in query:
+        supports_images = parse_bool(
+            query_first_alias(query, "supports_images", "supportsImages") or "", "supports_images",
+        )
+        if preset.supports_images != supports_images:
+            preset.supports_images = supports_images
             changed = True
     if "api" in query:
         api = _parse_preset_api(config, preset.model, preset.provider, query_first(query, "api"))
@@ -1541,6 +1559,7 @@ def migrate_model_configurations(
         config.model_presets[name] = ModelPresetConfig(
             model=primary.model,
             provider=primary.provider,
+            supports_images=primary.supports_images,
             max_tokens=primary.max_tokens,
             context_window_tokens=primary.context_window_tokens,
             temperature=primary.temperature,
@@ -1560,6 +1579,7 @@ def migrate_model_configurations(
         config.model_presets[name] = ModelPresetConfig(
             model=fallback.model,
             provider=fallback.provider,
+            supports_images=fallback.supports_images,
             max_tokens=(
                 fallback.max_tokens if fallback.max_tokens is not None else primary.max_tokens
             ),
@@ -1677,9 +1697,9 @@ def update_provider_settings(
         allowed = {
             "api_key",
             "api_base",
-            *_provider_advanced_field_names(provider_key, spec),
+            *_provider_advanced_field_names(spec),
         }
-        if find_by_name(provider_key) is None:
+        if spec.is_named_custom:
             allowed.add("display_name")
         if spec.provider_api_configurable:
             allowed.add("api")

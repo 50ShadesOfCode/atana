@@ -886,6 +886,8 @@
       "contextWindowError": "Enter a positive token count, such as 200k, 1m, or 131072.",
       "maxTokens": "Max output tokens",
       "temperature": "Temperature",
+      "imageInput": "Image input",
+      "imageInputHelp": "When off, requests containing images skip this preset.",
       "reasoningEffort": "Reasoning effort",
       "convertTitle": "Convert setup",
       "convertHelp": "Convert primary and fallback models to presets.",
@@ -954,7 +956,7 @@
       "previewPlaceholder": "Where should we begin?",
       "process": "Activity display",
       "processHelp": "Choose how much detail appears as nanobot works.",
-      "autoHelp": "Show progress while working; keep finished work compact.",
+      "autoHelp": "Keep details collapsed by default. Show the latest activity while working.",
       "expandedHelp": "Keep activity details expanded by default.",
       "summaryHelp": "Show changed files and line counts.",
       "diffHelp": "Show code changes directly in the conversation.",
@@ -1225,6 +1227,7 @@
       "defaultWorkspace": "Default workspace",
       "auto": "Auto",
       "default": "Default",
+      "collapsed": "Collapsed",
       "expanded": "Expanded",
       "summary": "Summary",
       "diff": "Diff",
@@ -2029,12 +2032,6 @@
     },
     "loadingConversation": "Loading conversation…",
     "empty": {
-      "greetings": {
-        "workOn": "What should we work on?",
-        "start": "Where should we start?",
-        "build": "What are we building today?",
-        "tackle": "What should we tackle together?"
-      },
       "quickActions": {
         "plan": {
           "title": "Make a plan",
@@ -2130,8 +2127,11 @@
       "goalStateStrip": "Goal: {{label}}",
       "goalStateFallback": "Goal",
       "goalStateExpandAria": "Show full goal",
+      "goalBlocked": "Blocked",
       "goalStateSheetTitle": "Goal",
-      "goalStateCloseAria": "Close goal",
+      "cancelGoal": "Cancel goal",
+      "cancelGoalFailed": "Could not cancel goal. Try again.",
+      "cancelGoalOffline": "Reconnect to cancel the goal.",
       "send": "Send message",
       "stop": "Stop response",
       "quotedContext": "Quoted context",
@@ -2227,7 +2227,6 @@
         "details": {
           "goalActive": "Goal is running",
           "goalReady": "Start a sustained objective",
-          "history": "Show recent messages",
           "stopRunning": "Running now"
         },
         "commands": {
@@ -2255,10 +2254,6 @@
             "title": "Model",
             "description": "View or switch the current model preset."
           },
-          "history": {
-            "title": "Chat history",
-            "description": "Show the last N saved messages."
-          },
           "dream": {
             "title": "Run Dream",
             "description": "Organize memory now."
@@ -2278,6 +2273,10 @@
           "goal": {
             "title": "Long-running goal",
             "description": "Have the assistant keep working toward this goal."
+          },
+          "cancel_goal": {
+            "title": "Cancel goal",
+            "description": "Cancel the active or blocked goal in this chat."
           },
           "trigger": {
             "title": "CLI trigger",
@@ -2439,11 +2438,37 @@
       "updatedLongTask": "Updated long task",
       "updateLongTaskFailed": "Could not update long task",
       "continuingCommand": "Continuing command",
+      "waitingCommandResult": "Waiting for command result",
+      "waitingCommandOutput": "Waiting for command output",
+      "sendingCommandInput": "Sending input",
+      "closingCommandInput": "Closing command input",
+      "sendingClosingInput": "Sending and closing command input",
+      "stoppingCommand": "Stopping command",
+      "commandStatusUnknown": "Command status unknown",
+      "commandWasRunning": "Command was still running at the last check",
+      "commandWaitTimedOut": "Wait timed out; command was still running at the last check",
+      "commandWasStopping": "Command was stopping at the last check",
+      "commandCompleted": "Command completed",
+      "commandExitFailed": "Command failed (exit code {{code}})",
+      "commandExited": "Command exited (exit code {{code}})",
+      "commandTimedOut": "Command timed out and was stopped",
+      "commandIdleTimedOut": "Command stopped after output silence",
+      "commandCheckedUnknown": "Command checked; status unknown",
+      "stopCommandError": "Could not stop command",
+      "sendCloseInputError": "Could not send or close command input",
+      "sendInputError": "Could not send input",
+      "closeInputError": "Could not close command input",
+      "checkCommandError": "Could not check command",
+      "sentClosedInput": "Sent and closed command input",
+      "sentCommandInput": "Sent input",
+      "closedCommandInput": "Closed command input",
       "continuedCommand": "Continued command",
       "continueCommandFailed": "Could not continue command",
       "checkingRunningCommands": "Checking running commands",
       "checkedRunningCommands": "Checked running commands",
       "checkRunningCommandsFailed": "Could not check running commands",
+      "showEarlierCommandChecks": "Show earlier command checks ({{count}})",
+      "hideEarlierCommandChecks": "Hide earlier command checks ({{count}})",
       "capturingScreenshot": "Capturing screenshot",
       "capturedScreenshot": "Captured screenshot",
       "captureScreenshotFailed": "Could not capture screenshot",
