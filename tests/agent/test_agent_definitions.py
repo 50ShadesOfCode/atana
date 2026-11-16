@@ -46,6 +46,18 @@ def test_empty_tools_list_means_no_tools(tmp_path):
     assert discover_agents(tmp_path)["solo"].tools == ()
 
 
+def test_empty_tools_value_means_every_tool(tmp_path):
+    _write(tmp_path, "inherit", "---\nname: inherit\ndescription: Inherits.\ntools:\n---\nInherit.\n")
+
+    assert discover_agents(tmp_path)["inherit"].tools is None
+
+
+def test_skips_tools_of_the_wrong_type(tmp_path):
+    _write(tmp_path, "broken", "---\nname: broken\ndescription: Broken.\ntools: 5\n---\nBroken.\n")
+
+    assert discover_agents(tmp_path) == {}
+
+
 def test_aliases_claude_tool_names(tmp_path):
     _write(
         tmp_path,

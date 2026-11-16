@@ -585,14 +585,16 @@ class SubagentManager:
         )
         ToolLoader().load(ctx, registry, scope="subagent")
         if allow is not None:
-            missing = [name for name in allow if not registry.has(name)]
-            if missing:
-                raise SubagentControlError(f"unavailable tools: {', '.join(missing)}")
+            unknown = [name for name in allow if not registry.has(name)]
+            if unknown:
+                logger.warning("Ignoring unavailable subagent tools: {}", ", ".join(unknown))
             for name in registry.tool_names:
                 if name not in allow:
                     registry.unregister(name)
             if not registry.tool_names:
-                raise SubagentControlError("agent allows no available tools")
+                raise SubagentControlError(
+                    "no available tools among: " + ", ".join(allow)
+                )
         return registry
 
     async def _create_task(

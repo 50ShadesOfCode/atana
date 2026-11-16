@@ -19,7 +19,7 @@ files.
 
 - `name` is required and must equal the file name without `.md`: lowercase letters, digits and hyphens, at most 64 characters, no double hyphen.
 - `description` is required, up to 1024 characters. This is what the main agent sees when deciding whether to delegate, so say when to use the role.
-- `tools` is optional. Omit it to give the role every tool a subagent can use; list names to restrict it; an explicit empty list means the role gets no tools and any task it starts fails.
+- `tools` is optional. Omit it, or leave it without a value, to give the role every tool a subagent can use; list names to restrict it; an explicit empty list means the role gets no tools and any task it starts fails.
 - Everything after the frontmatter is the role's system prompt. It is added to the standard subagent prompt, not substituted for it, so the workspace, skills summary and untrusted-content rules stay in place.
 
 ## Dispatch a role
@@ -38,9 +38,9 @@ Use nanobot's names inside `tools`:
 
 `read_file`, `write_file`, `edit_file`, `apply_patch`, `list_dir`, `find_files`, `rg`, `exec`, `exec_session`, `list_exec_sessions`, `run_cli_app`, `web_search`, `web_fetch`.
 
-Definitions written for Claude Code are accepted with their tool names mapped: `Read`→`read_file`, `Write`→`write_file`, `Edit`→`edit_file`, `Glob`→`find_files`, `Grep`→`rg`, `Bash`→`exec`, `LS`→`list_dir`, `WebSearch`→`web_search`, `WebFetch`→`web_fetch`. A name that maps to nothing, or that nanobot does not offer, logs a warning and the role is skipped — it never runs half-configured.
+Definitions written for Claude Code are accepted with their tool names mapped: `Read`→`read_file`, `Write`→`write_file`, `Edit`→`edit_file`, `Glob`→`find_files`, `Grep`→`rg`, `Bash`→`exec`, `LS`→`list_dir`, `WebSearch`→`web_search`, `WebFetch`→`web_fetch`. A name that nanobot does not offer is ignored with a warning, and the role runs with the rest of its list, so a copied definition that also names MCP tools still works. The task fails only when nothing in the list is available.
 
-One trap: when `rg` is installed, nanobot drops `grep` and `find_files` in favour of it. Listing `grep` then leaves the role with no such tool and the task fails with the tool name. Use `rg` for searching.
+One trap: when `rg` is installed, nanobot drops `grep` and `find_files` in favour of it. Listing `grep` alone then leaves the role with no tools and the task fails. Use `rg` for searching.
 
 ## Copy a role from another harness
 
@@ -52,4 +52,6 @@ Files from Claude Code or ECC mostly work as they are: the frontmatter and the b
 
 ## Not supported yet
 
-A role cannot choose its own model, cannot carry its own MCP servers or hooks, and cannot spawn further subagents. Roles are read from the agent workspace only; `.claude/agents/` and per-project role directories are not scanned. Definition files are read on each use, so edits apply immediately, at the cost of a directory listing per turn.
+A role cannot choose its own model, cannot carry its own MCP servers or hooks, and cannot spawn further subagents. Roles are read from the agent workspace only; `.claude/agents/` and per-project role directories are not scanned.
+
+A role file is read when a task starts with that role, so edits to its prompt or tools apply to the next task. The list of roles the main agent is shown lives in the `subagent` tool description, which nanobot rebuilds only when its tool set changes — in practice, after a restart. Calling a new role by name works without a restart. Descriptions longer than 200 characters are shortened in that list; the full text stays in the file.

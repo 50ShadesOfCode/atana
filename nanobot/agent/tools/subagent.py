@@ -23,6 +23,15 @@ if TYPE_CHECKING:
     from nanobot.agent.tools.context import ToolContext
 
 
+_CATALOG_DESCRIPTION_CHARS = 200
+
+
+def _catalog_description(description: str) -> str:
+    if len(description) <= _CATALOG_DESCRIPTION_CHARS:
+        return description
+    return description[: _CATALOG_DESCRIPTION_CHARS - 1] + "…"
+
+
 @tool_parameters(tool_parameters_schema(
     action=StringSchema(
         "create starts a task; send queues a message; cancel requests an idempotent stop; "
@@ -87,7 +96,9 @@ class SubagentTool(Tool):
         if not catalog:
             return base
         lines = [base, "", "Custom agents (pass agent= to create):"]
-        lines.extend(f"- {agent.name} — {agent.description}" for agent in catalog)
+        # shortcut: catalog descriptions are cut at 200 characters to keep the
+        # tool description small; revisit if roles need longer triggers.
+        lines.extend(f"- {agent.name} — {_catalog_description(agent.description)}" for agent in catalog)
         return "\n".join(lines)
 
     @property

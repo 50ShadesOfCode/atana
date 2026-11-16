@@ -1,6 +1,7 @@
 import asyncio
 import time
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -600,10 +601,14 @@ class TestSubagentHook:
         assert status.error == "something broke"
 
 
-def _write_agent(workspace: Path, name: str = "reviewer", body: str = "You are a reviewer.") -> None:
+def _write_agent(
+    workspace: Path, name: str = "reviewer", body: str = "You are a reviewer.",
+    tools: str | None = None,
+) -> None:
     (workspace / "agents").mkdir(exist_ok=True)
+    limit = f"tools: {tools}\n" if tools is not None else ""
     (workspace / "agents" / f"{name}.md").write_text(
-        f"---\nname: {name}\ndescription: Reviews code.\n---\n{body}\n",
+        f"---\nname: {name}\ndescription: Reviews code.\n{limit}---\n{body}\n",
         encoding="utf-8",
     )
 
@@ -629,9 +634,9 @@ def test_unknown_agent_definition_is_none(tmp_path):
 
 @pytest.mark.asyncio
 async def test_spawn_uses_role_prompt_and_label(tmp_path):
-    _write_agent(tmp_path)
+    _write_agent(tmp_path, tools="read_file")
     sm = _manager(tmp_path)
-    captured: dict[str, object] = {}
+    captured: dict[str, Any] = {}
 
     async def run(spec):
         captured["spec"] = spec
@@ -648,6 +653,7 @@ async def test_spawn_uses_role_prompt_and_label(tmp_path):
     spec = captured["spec"]
     assert "## Role: reviewer" in spec.initial_messages[0]["content"]
     assert "reviewer: review the diff" in reply
+    assert spec.tools.tool_names == ["read_file"]
 
 
 def test_allowlist_keeps_only_listed_tools(tmp_path):
@@ -656,9 +662,15 @@ def test_allowlist_keeps_only_listed_tools(tmp_path):
     assert set(registry.tool_names) == {"read_file"}
 
 
-def test_allowlist_rejects_an_unknown_tool(tmp_path):
-    with pytest.raises(SubagentControlError, match="nope"):
-        _manager(tmp_path)._build_tools(allow=("read_file", "nope"))
+def test_allowlist_ignores_an_unavailable_tool(tmp_path):
+    registry = _manager(tmp_path)._build_tools(allow=("read_file", "nope"))
+
+    assert set(registry.tool_names) == {"read_file"}
+
+
+def test_allowlist_without_available_tools_rejects_the_task(tmp_path):
+    with pytest.raises(SubagentControlError):
+        _manager(tmp_path)._build_tools(allow=("nope",))
 
 
 def test_empty_allowlist_rejects_the_task(tmp_path):

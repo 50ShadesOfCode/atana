@@ -63,8 +63,9 @@ def _load_agent(path: Path) -> AgentDefinition | None:
     if metadata is None or not valid_skill_metadata(metadata, path.stem):
         logger.warning("Ignoring agent definition '{}': invalid metadata", path)
         return None
-    tools = _parse_tools(metadata.get("tools")) if "tools" in metadata else None
-    if tools is None and "tools" in metadata:
+    try:
+        tools = _parse_tools(metadata.get("tools"))
+    except ValueError:
         logger.warning("Ignoring agent definition '{}': invalid tools", path)
         return None
     match = SKILL_FRONTMATTER.match(text)
@@ -82,15 +83,18 @@ def _load_agent(path: Path) -> AgentDefinition | None:
 
 
 def _parse_tools(raw: object) -> tuple[str, ...] | None:
+    """Return the role's tool allowlist; ``None`` means every tool."""
+    if raw is None:
+        return None
     if isinstance(raw, str):
         names = [part.strip() for part in raw.split(",")]
     elif isinstance(raw, list):
         values = cast(list[object], raw)
         if not all(isinstance(value, str) for value in values):
-            return None
+            raise ValueError("tools must contain only names")
         names = [cast(str, value).strip() for value in values]
     else:
-        return None
+        raise ValueError("tools must be a string or a list")
     resolved: list[str] = []
     for name in names:
         if not name:
