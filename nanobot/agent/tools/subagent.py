@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any
 
+from nanobot.agent.agents import AgentDefinition
 from nanobot.agent.subagent import SubagentControlError
 from nanobot.agent.tools.base import Tool, ToolResult, tool_parameters
 from nanobot.agent.tools.context import current_request_context, current_request_session_key
@@ -52,6 +53,10 @@ if TYPE_CHECKING:
         "Delivery receipts mean injected into the task transcript, not that the task acted on the message.",
         max_length=8192,
     ),
+    agent=StringSchema(
+        "For create: name of a custom agent from the available list; "
+        "omit for a general-purpose subagent.",
+    ),
     required=["action"],
 ))
 class SubagentTool(Tool):
@@ -72,12 +77,18 @@ class SubagentTool(Tool):
 
     @property
     def description(self) -> str:
-        return (
+        base = (
             "Manage the current session's private subagent tasks. "
             "Background results arrive automatically; avoid repeated polling. "
             "Check with a known task_id to read older results. "
             "Partial results or iteration limits do not mean completion."
         )
+        catalog = self._manager.agent_catalog()
+        if not catalog:
+            return base
+        lines = [base, "", "Custom agents (pass agent= to create):"]
+        lines.extend(f"- {agent.name} — {agent.description}" for agent in catalog)
+        return "\n".join(lines)
 
     @property
     def concurrency_safe(self) -> bool:
@@ -86,12 +97,21 @@ class SubagentTool(Tool):
     async def execute(
         self, action: str, task_id: str | None = None, message: str | None = None,
         task: str | None = None, label: str | None = None,
-        temperature: float | None = None, wait: bool = False, **kwargs: Any,
+        temperature: float | None = None, wait: bool = False,
+        agent: str | None = None, **kwargs: Any,
     ) -> str:
         if action == "create":
             if not task or not task.strip():
                 return ToolResult.error("Error: create requires a non-empty task")
-            return await self._create_task(task, label, temperature, wait)
+            definition = None
+            if agent is not None:
+                definition = self._manager.agent_definition(agent)
+                if definition is None:
+                    available = ", ".join(name.name for name in self._manager.agent_catalog()) or "none"
+                    return ToolResult.error(
+                        f"Error: unknown agent '{agent}'. Available: {available}"
+                    )
+            return await self._create_task(task, label, temperature, wait, definition)
         owner = current_request_session_key()
         try:
             if action == "check":
@@ -116,6 +136,7 @@ class SubagentTool(Tool):
 
     async def _create_task(
         self, task: str, label: str | None, temperature: float | None, wait: bool,
+        agent: AgentDefinition | None = None,
     ) -> str:
         request_ctx = current_request_context()
         if request_ctx is None or request_ctx.runtime is None:
@@ -144,4 +165,5 @@ class SubagentTool(Tool):
                 persist=request_ctx.persist_session,
                 log_content=request_ctx.log_content,
             ),
+            agent=agent,
         )
