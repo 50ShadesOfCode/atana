@@ -12,7 +12,12 @@ from loguru import logger
 
 from nanobot import __version__
 from nanobot.agent import model_presets as preset_helpers
-from nanobot.agent.agents import AgentDefinition, AgentIssue, inspect_agents
+from nanobot.agent.agents import (
+    AgentDefinition,
+    AgentIssue,
+    catalog_description,
+    inspect_agents,
+)
 from nanobot.bus.events import OutboundMessage
 from nanobot.command.router import CommandContext, CommandRouter
 from nanobot.command.spec import BuiltinCommandSpec
@@ -906,7 +911,7 @@ def _agents_list(
     lines = [f"Custom agents ({len(agents)}):", ""]
     for name, agent in agents.items():
         tools = "all subagent tools" if agent.tools is None else (", ".join(agent.tools) or "no tools")
-        lines.append(f"- **{name}** — {agent.description} (tools: {tools})")
+        lines.append(f"- **{name}** — {catalog_description(agent.description)} (tools: {tools})")
     if issues:
         lines.extend(["", "Skipped files:"])
         lines.extend(f"- **{issue.name}** — {issue.reason}" for issue in issues)
@@ -924,13 +929,26 @@ async def _start_agent_role(
         return "Usage: /agents run <role> <task>"
     if ctx.runtime is None:
         return "Cannot start an agent task here: no active model runtime."
+    metadata = dict(ctx.msg.metadata or {})
+    session = ctx.session or await ctx.loop.sessions.state.get(ctx.key)
+    # The role must run in the chat's project and under its sandbox policy, as a
+    # model-started subagent does.
+    scope = ctx.loop.workspace_scopes.for_turn(
+        channel=ctx.msg.channel,
+        message_metadata=metadata,
+        session_metadata=session.metadata,
+    )
     return await ctx.loop.subagents.spawn(
         task=task,
         label=None,
         origin_channel=ctx.msg.channel,
         origin_chat_id=ctx.msg.chat_id,
         session_key=ctx.key,
+        origin_message_id=metadata.get("message_id"),
+        origin_turn_id=metadata.get("webui_turn_id"),
         runtime=ctx.runtime,
+        workspace_scope=scope,
+        session_policy=session.policy,
         agent=definition,
     )
 

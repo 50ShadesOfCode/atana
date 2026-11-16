@@ -10,6 +10,7 @@ from nanobot.command.application import builtin_command_palette, register_builti
 from nanobot.command.builtin import build_help_text, cmd_agents
 from nanobot.command.router import CommandContext, CommandRouter
 from nanobot.config.schema import ModelPresetConfig
+from nanobot.session.manager import Session, SessionPolicy
 
 
 def _provider(default_model: str = "test-model") -> MagicMock:
@@ -39,10 +40,16 @@ def _loop(tmp_path: Path) -> AgentLoop:
     )
 
 
-def _ctx(loop: AgentLoop, raw: str = "/agents", *, args: str = "") -> CommandContext:
-    msg = InboundMessage(channel="cli", sender_id="user", chat_id="direct", content=raw)
+def _ctx(
+    loop: AgentLoop, raw: str = "/agents", *, args: str = "",
+    metadata: dict[str, object] | None = None, session: Session | None = None,
+) -> CommandContext:
+    msg = InboundMessage(
+        channel="cli", sender_id="user", chat_id="direct", content=raw,
+        metadata=metadata or {},
+    )
     return CommandContext(
-        msg=msg, session=None, key=msg.session_key, raw=raw, args=args, loop=loop,
+        msg=msg, session=session, key=msg.session_key, raw=raw, args=args, loop=loop,
         runtime=MagicMock(),
     )
 
@@ -103,7 +110,12 @@ async def test_agents_command_starts_the_role_in_this_session(tmp_path: Path) ->
     loop = _loop(tmp_path)
     loop.subagents.spawn = AsyncMock(return_value="Subagent [reviewer: review this] started (id: t1).")
 
-    out = await cmd_agents(_ctx(loop, args="run reviewer review this"))
+    out = await cmd_agents(_ctx(
+        loop,
+        args="run reviewer review this",
+        metadata={"message_id": "msg-1", "webui_turn_id": "turn-1"},
+        session=Session(key="cli:direct", policy=SessionPolicy(persist=False)),
+    ))
 
     assert "started (id: t1)" in out.content
     loop.subagents.spawn.assert_awaited_once()
@@ -112,6 +124,25 @@ async def test_agents_command_starts_the_role_in_this_session(tmp_path: Path) ->
     assert kwargs["agent"].name == "reviewer"
     assert kwargs["agent"].tools == ("read_file",)
     assert kwargs["session_key"] == "cli:direct"
+    assert kwargs["origin_message_id"] == "msg-1"
+    assert kwargs["origin_turn_id"] == "turn-1"
+    assert kwargs["session_policy"].persist is False
+    assert str(kwargs["workspace_scope"].project_path) == str(tmp_path)
+
+
+@pytest.mark.asyncio
+async def test_agents_run_reaches_the_role_through_the_router(tmp_path: Path) -> None:
+    _write_agent(tmp_path, "reviewer")
+    loop = _loop(tmp_path)
+    loop.subagents.spawn = AsyncMock(return_value="started (id: t2).")
+    router = CommandRouter()
+    register_builtin_commands(router)
+
+    out = await router.dispatch(_ctx(loop, "/agents run reviewer review this"))
+
+    assert out is not None
+    assert "started (id: t2)" in out.content
+    assert loop.subagents.spawn.await_args.kwargs["task"] == "review this"
 
 
 @pytest.mark.asyncio
@@ -124,6 +155,16 @@ async def test_agents_command_registered_on_router(tmp_path: Path) -> None:
 
     assert out is not None
     assert "**reviewer**" in out.content
+
+
+@pytest.mark.asyncio
+async def test_agents_command_shortens_long_descriptions(tmp_path: Path) -> None:
+    _write_agent(tmp_path, "verbose", description="x" * 500)
+
+    out = await cmd_agents(_ctx(_loop(tmp_path)))
+
+    assert "…" in out.content
+    assert "x" * 201 not in out.content
 
 
 def test_agents_command_in_help_and_palette() -> None:

@@ -14,6 +14,10 @@ from nanobot.agent.skill_metadata import (
 
 AGENTS_DIR = "agents"
 
+# A compact role list keeps the tool description and chat replies small; the full
+# text stays in the file.
+CATALOG_DESCRIPTION_CHARS = 200
+
 # Claude Code agents name tools the way Claude Code does; map them onto ours so a
 # copied definition keeps working.
 CLAUDE_TOOL_ALIASES: dict[str, str] = {
@@ -46,6 +50,13 @@ class AgentIssue:
 
     name: str
     reason: str
+
+
+def catalog_description(description: str) -> str:
+    """Shorten a role description for lists that are budgeted."""
+    if len(description) <= CATALOG_DESCRIPTION_CHARS:
+        return description
+    return description[: CATALOG_DESCRIPTION_CHARS - 1] + "…"
 
 
 def discover_agents(workspace: Path) -> dict[str, AgentDefinition]:

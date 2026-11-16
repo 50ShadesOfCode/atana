@@ -518,6 +518,49 @@ async def test_session_automations_route_lists_local_triggers(
 
 
 @pytest.mark.asyncio
+async def test_webui_agents_route_requires_token_and_hides_paths(
+    bus: MagicMock, tmp_path: Path
+) -> None:
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents" / "reviewer.md").write_text(
+        "---\nname: reviewer\ndescription: Reviews diffs.\ntools: read_file, rg\n---\nReview.\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "agents" / "broken.md").write_text("---\nname: [unclosed\n---\nBody.\n", encoding="utf-8")
+    channel = _ch(
+        bus,
+        session_manager=_seed_session(tmp_path),
+        workspace_path=tmp_path,
+        port=29920,
+    )
+    server_task = asyncio.create_task(channel.start())
+    try:
+        deny = await _http_get("http://127.0.0.1:29920/api/webui/agents")
+        assert deny.status_code == 401
+
+        token = channel.gateway.tokens.issue_api_token(300)
+        resp = await _http_get(
+            "http://127.0.0.1:29920/api/webui/agents",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["agents"] == [{
+            "name": "reviewer",
+            "description": "Reviews diffs.",
+            "tools": ["read_file", "rg"],
+            "path": "agents/reviewer.md",
+        }]
+        assert body["issues"] == [{"name": "broken", "reason": "invalid metadata"}]
+    finally:
+        await channel.stop()
+        server_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await server_task
+
+
+@pytest.mark.asyncio
 async def test_webui_skills_route_requires_token_and_hides_paths(
     bus: MagicMock, tmp_path: Path
 ) -> None:

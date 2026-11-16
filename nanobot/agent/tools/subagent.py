@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING, Any
 
-from nanobot.agent.agents import AgentDefinition
+from nanobot.agent.agents import AgentDefinition, catalog_description
 from nanobot.agent.subagent import SubagentControlError
 from nanobot.agent.tools.base import Tool, ToolResult, tool_parameters
 from nanobot.agent.tools.context import current_request_context, current_request_session_key
@@ -21,15 +21,6 @@ from nanobot.session.manager import SessionPolicy
 if TYPE_CHECKING:
     from nanobot.agent.subagent import SubagentManager
     from nanobot.agent.tools.context import ToolContext
-
-
-_CATALOG_DESCRIPTION_CHARS = 200
-
-
-def _catalog_description(description: str) -> str:
-    if len(description) <= _CATALOG_DESCRIPTION_CHARS:
-        return description
-    return description[: _CATALOG_DESCRIPTION_CHARS - 1] + "…"
 
 
 @tool_parameters(tool_parameters_schema(
@@ -96,9 +87,7 @@ class SubagentTool(Tool):
         if not catalog:
             return base
         lines = [base, "", "Custom agents (pass agent= to create):"]
-        # shortcut: catalog descriptions are cut at 200 characters to keep the
-        # tool description small; revisit if roles need longer triggers.
-        lines.extend(f"- {agent.name} — {_catalog_description(agent.description)}" for agent in catalog)
+        lines.extend(f"- {agent.name} — {catalog_description(agent.description)}" for agent in catalog)
         return "\n".join(lines)
 
     @property
