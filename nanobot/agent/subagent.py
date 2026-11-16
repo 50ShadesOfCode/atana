@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict, cast
 
 from loguru import logger
 
+from nanobot.agent.agents import AgentDefinition, discover_agents
 from nanobot.agent.hook import AgentHook, AgentHookContext
 from nanobot.agent.hooks import create_file_edit_activity_hook
 from nanobot.agent.runner import AgentCheckpoint, AgentRunner, AgentRunSpec
@@ -97,6 +98,7 @@ class _SubagentTask:
     origin: _SubagentOrigin
     origin_message_id: str | None = None
     workspace_scope: WorkspaceScope | None = None
+    agent: AgentDefinition | None = None
     announce: bool = True
     begun: bool = False
     suppress_notice: bool = False
@@ -201,6 +203,11 @@ class _SubagentHook(AgentHook):
             self._status.error = str(context.error)
         if self._on_status is not None:
             await self._on_status(self._status)
+
+
+def _default_task_label(task: str, agent: AgentDefinition | None) -> str:
+    summary = task[:30] + ("..." if len(task) > 30 else "")
+    return f"{agent.name}: {summary}" if agent is not None else summary
 
 
 class SubagentManager:
@@ -583,7 +590,7 @@ class SubagentManager:
         session_key: str | None, origin_message_id: str | None,
         temperature: float | None, workspace_scope: WorkspaceScope | None,
         runtime: LLMRuntime | None, *, announce: bool, origin_turn_id: str | None,
-        session_policy: SessionPolicy | None,
+        session_policy: SessionPolicy | None, agent: AgentDefinition | None = None,
     ) -> _SubagentTask:
         self.bus.admission.check()
         if runtime is None:
@@ -598,7 +605,7 @@ class SubagentManager:
         status = SubagentStatus(
             task_id=task_id,
             revision=1,
-            label=label or task[:30] + ("..." if len(task) > 30 else ""),
+            label=label or _default_task_label(task, agent),
             task_description=task,
             started_at=time.monotonic(),
             owner=owner,
@@ -637,6 +644,7 @@ class SubagentManager:
             },
             origin_message_id=origin_message_id,
             workspace_scope=workspace_scope,
+            agent=agent,
             announce=announce,
         )
         self._tasks[task_id] = record
@@ -663,6 +671,7 @@ class SubagentManager:
         runtime: LLMRuntime | None = None,
         origin_turn_id: str | None = None,
         session_policy: SessionPolicy | None = None,
+        agent: AgentDefinition | None = None,
     ) -> str:
         """Start background work and route its terminal result to the parent."""
         try:
@@ -670,6 +679,7 @@ class SubagentManager:
                 task, label, origin_channel, origin_chat_id, session_key,
                 origin_message_id, temperature, workspace_scope, runtime, announce=True, origin_turn_id=origin_turn_id,
                 session_policy=session_policy,
+                agent=agent,
             )
         except SubagentControlError as exc:
             return ToolResult.error(f"Error: {exc}")
@@ -691,6 +701,7 @@ class SubagentManager:
         runtime: LLMRuntime | None = None,
         origin_turn_id: str | None = None,
         session_policy: SessionPolicy | None = None,
+        agent: AgentDefinition | None = None,
     ) -> str:
         """Wait for the same task lifecycle without a background notice."""
         try:
@@ -698,6 +709,7 @@ class SubagentManager:
                 task, label, origin_channel, origin_chat_id, session_key,
                 origin_message_id, temperature, workspace_scope, runtime, announce=False, origin_turn_id=origin_turn_id,
                 session_policy=session_policy,
+                agent=agent,
             )
         except SubagentControlError as exc:
             return ToolResult.error(f"Error: {exc}")
@@ -813,7 +825,7 @@ class SubagentManager:
             cfg.restrict_to_workspace = workspace_scope.restrict_to_workspace
         # Construct from the agent workspace; the bound scope below supplies the project cwd.
         tools = self._build_tools(tools_config=cfg, exec_manager=record.exec_manager)
-        system_prompt = self._build_subagent_prompt(workspace=root)
+        system_prompt = self._build_subagent_prompt(workspace=root, agent=record.agent)
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": system_prompt},
             *record.session.get_history(),
@@ -985,7 +997,17 @@ class SubagentManager:
         await self.bus.publish_inbound(msg)
         logger.debug("Subagent [{}] announced result to {}:{}", task_id, origin['channel'], origin['chat_id'])
 
-    def _build_subagent_prompt(self, workspace: Path | None = None) -> str:
+    def agent_definition(self, name: str) -> AgentDefinition | None:
+        """Return the custom subagent role called *name*, if it exists."""
+        return discover_agents(self.workspace).get(name)
+
+    def agent_catalog(self) -> list[AgentDefinition]:
+        """Return the custom subagent roles available in this workspace."""
+        return list(discover_agents(self.workspace).values())
+
+    def _build_subagent_prompt(
+        self, workspace: Path | None = None, agent: AgentDefinition | None = None,
+    ) -> str:
         from nanobot.agent.skills import SkillsLoader
 
         agent_workspace = self.workspace.expanduser().resolve()
@@ -999,13 +1021,16 @@ class SubagentManager:
             if agent_workspace != project_workspace
             else "memory/history.jsonl"
         )
-        return render_template(
+        prompt = render_template(
             "agent/subagent_system.md",
             workspace=str(project_workspace),
             agent_workspace=str(agent_workspace),
             history_log=history_log,
             skills_summary=skills_summary or "",
         )
+        if agent is None:
+            return prompt
+        return f"{prompt}\n\n## Role: {agent.name}\n\n{agent.prompt}\n"
 
     async def cancel_by_session(self, session_key: str) -> int:
         """Cancel all subagents for the given session. Returns count cancelled."""

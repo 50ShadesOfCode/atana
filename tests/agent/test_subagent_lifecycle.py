@@ -597,3 +597,53 @@ class TestSubagentHook:
         ctx = _make_hook_context(error="something broke")
         await hook.after_iteration(ctx)
         assert status.error == "something broke"
+
+
+def _write_agent(workspace: Path, name: str = "reviewer", body: str = "You are a reviewer.") -> None:
+    (workspace / "agents").mkdir(exist_ok=True)
+    (workspace / "agents" / f"{name}.md").write_text(
+        f"---\nname: {name}\ndescription: Reviews code.\n---\n{body}\n",
+        encoding="utf-8",
+    )
+
+
+def test_prompt_appends_role_section_after_the_base_prompt(tmp_path):
+    _write_agent(tmp_path)
+    sm = _manager(tmp_path)
+
+    prompt = sm._build_subagent_prompt(agent=sm.agent_definition("reviewer"))
+
+    assert "## Role: reviewer" in prompt
+    assert "You are a reviewer." in prompt
+    assert "History log:" in prompt
+
+
+def test_prompt_without_agent_has_no_role_section(tmp_path):
+    assert "## Role:" not in _manager(tmp_path)._build_subagent_prompt()
+
+
+def test_unknown_agent_definition_is_none(tmp_path):
+    assert _manager(tmp_path).agent_definition("missing") is None
+
+
+@pytest.mark.asyncio
+async def test_spawn_uses_role_prompt_and_label(tmp_path):
+    _write_agent(tmp_path)
+    sm = _manager(tmp_path)
+    captured: dict[str, object] = {}
+
+    async def run(spec):
+        captured["spec"] = spec
+        return AgentRunResult(final_content="ok", messages=[], stop_reason="completed")
+
+    sm.runner.run = run
+    sm._announce_result = AsyncMock()
+
+    reply = await sm.spawn(
+        "review the diff", agent=sm.agent_definition("reviewer"), runtime=_runtime(),
+    )
+    await _drain_subagent_tasks(sm)
+
+    spec = captured["spec"]
+    assert "## Role: reviewer" in spec.initial_messages[0]["content"]
+    assert "reviewer: review the diff" in reply
