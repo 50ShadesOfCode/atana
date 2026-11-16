@@ -124,6 +124,7 @@ def test_loader_registers_exec_with_real_tools_config(tmp_path):
         subagent_manager=SimpleNamespace(
             get_running_count=lambda: 0,
             max_concurrent_subagents=4,
+            agent_catalog=lambda: [],
         ),
         cron_service=None,
         timezone="UTC",
@@ -149,6 +150,7 @@ def test_loader_wires_shared_exec_session_manager(tmp_path):
         subagent_manager=SimpleNamespace(
             get_running_count=lambda: 0,
             max_concurrent_subagents=4,
+            agent_catalog=lambda: [],
         ),
         exec_session_manager=manager,
         timezone="UTC",

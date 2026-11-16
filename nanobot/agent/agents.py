@@ -85,9 +85,10 @@ def _parse_tools(raw: object) -> tuple[str, ...] | None:
     if isinstance(raw, str):
         names = [part.strip() for part in raw.split(",")]
     elif isinstance(raw, list):
-        if not all(isinstance(part, str) for part in raw):
+        values = cast(list[object], raw)
+        if not all(isinstance(value, str) for value in values):
             return None
-        names = [cast(str, part).strip() for part in raw]
+        names = [cast(str, value).strip() for value in values]
     else:
         return None
     resolved: list[str] = []
