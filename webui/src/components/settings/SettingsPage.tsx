@@ -619,7 +619,7 @@ export function SettingsPage({
       case "skills":
         return <SkillsCatalogSettings skills={skills} loading={skillsLoading} error={skillsError} />;
       case "subagents":
-        return <AgentsCatalogSettings />;
+        return <AgentsCatalogSettings onRunCommand={onStartAutomationChat} />
       default:
         return renderSettingsSection(section, embedded);
     }

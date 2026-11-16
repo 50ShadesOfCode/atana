@@ -384,6 +384,7 @@ export interface AgentSummary {
   name: string;
   description: string;
   tools: string[] | null;
+  tools_missing: string[];
   path: string;
 }
 

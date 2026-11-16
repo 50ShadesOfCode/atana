@@ -8,8 +8,8 @@ from loguru import logger
 
 from nanobot.agent.skill_metadata import (
     SKILL_FRONTMATTER,
+    SKILL_NAME,
     parse_skill_metadata,
-    valid_skill_metadata,
 )
 
 AGENTS_DIR = "agents"
@@ -80,6 +80,20 @@ def inspect_agents(workspace: Path) -> tuple[dict[str, AgentDefinition], list[Ag
     return agents, issues
 
 
+def _metadata_reason(metadata: dict[str, object], name: str) -> str | None:
+    """Explain why a role's frontmatter is unusable, or return None."""
+    if metadata.get("name") != name:
+        return "name must match the file name"
+    if len(name) > 64 or SKILL_NAME.fullmatch(name) is None:
+        return "name must use lowercase letters, digits and dashes"
+    description = metadata.get("description")
+    if not isinstance(description, str) or not description.strip():
+        return "description is required"
+    if len(description.strip()) > 1024:
+        return "description is at most 1024 characters"
+    return None
+
+
 def _load_agent(path: Path) -> tuple[AgentDefinition | None, str | None]:
     try:
         text = path.read_text(encoding="utf-8")
@@ -87,14 +101,18 @@ def _load_agent(path: Path) -> tuple[AgentDefinition | None, str | None]:
         logger.warning("Ignoring agent definition '{}': unreadable", path)
         return None, "unreadable"
     metadata = parse_skill_metadata(text)
-    if metadata is None or not valid_skill_metadata(metadata, path.stem):
-        logger.warning("Ignoring agent definition '{}': invalid metadata", path)
-        return None, "invalid metadata"
+    if metadata is None:
+        logger.warning("Ignoring agent definition '{}': invalid frontmatter", path)
+        return None, "frontmatter is not valid YAML"
+    reason = _metadata_reason(metadata, path.stem)
+    if reason is not None:
+        logger.warning("Ignoring agent definition '{}': {}", path, reason)
+        return None, reason
     try:
         tools = _parse_tools(metadata.get("tools"))
-    except ValueError:
+    except ValueError as exc:
         logger.warning("Ignoring agent definition '{}': invalid tools", path)
-        return None, "invalid tools"
+        return None, str(exc)
     match = SKILL_FRONTMATTER.match(text)
     prompt = text[match.end():].strip() if match else text.strip()
     if not prompt:
@@ -121,10 +139,10 @@ def _parse_tools(raw: object) -> tuple[str, ...] | None:
     elif isinstance(raw, list):
         values = cast(list[object], raw)
         if not all(isinstance(value, str) for value in values):
-            raise ValueError("tools must contain only names")
+            raise ValueError("tools must be a list of tool names or a comma-separated string")
         names = [cast(str, value).strip() for value in values]
     else:
-        raise ValueError("tools must be a string or a list")
+        raise ValueError("tools must be a list of tool names or a comma-separated string")
     resolved: list[str] = []
     for name in names:
         if not name:

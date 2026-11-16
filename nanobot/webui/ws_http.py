@@ -1867,8 +1867,13 @@ class GatewayHTTPHandler:
     async def _handle_webui_agents(self, request: WsRequest) -> Response:
         if not self.check_api_token(request):
             return _http_error(401, "Unauthorized")
-        payload = await asyncio.to_thread(webui_agents_payload, self.skills_workspace_path)
+        payload = await asyncio.to_thread(self._agents_payload)
         return _http_json_response(payload)
+
+    def _agents_payload(self) -> dict[str, Any]:
+        manager = self.subagent_manager
+        available = manager.available_tool_names() if manager is not None else None
+        return webui_agents_payload(self.skills_workspace_path, available_tools=available)
 
     async def _handle_webui_skills_search(self, request: WsRequest) -> Response:
         if not self.check_api_token(request):

@@ -116,6 +116,21 @@ def test_inspect_agents_reports_skipped_files_with_reasons(tmp_path):
 
     assert list(agents) == ["reviewer"]
     assert {(issue.name, issue.reason) for issue in issues} == {
-        ("broken", "invalid metadata"),
-        ("typed", "invalid tools"),
+        ("broken", "frontmatter is not valid YAML"),
+        ("typed", "tools must be a list of tool names or a comma-separated string"),
     }
+
+
+def test_issue_reasons_explain_what_to_fix(tmp_path):
+    _write(tmp_path, "renamed", "---\nname: other\ndescription: Reviews.\n---\nReview.\n")
+    _write(tmp_path, "described", "---\nname: described\n---\nReview.\n")
+    _write(tmp_path, "Body", "---\nname: Body\ndescription: Reviews.\n---\nReview.\n")
+    _write(tmp_path, "empty", "---\nname: empty\ndescription: Reviews.\n---\n\n")
+
+    _, issues = inspect_agents(tmp_path)
+
+    reasons = {issue.name: issue.reason for issue in issues}
+    assert reasons["renamed"] == "name must match the file name"
+    assert reasons["described"] == "description is required"
+    assert reasons["Body"] == "name must use lowercase letters, digits and dashes"
+    assert reasons["empty"] == "empty prompt"

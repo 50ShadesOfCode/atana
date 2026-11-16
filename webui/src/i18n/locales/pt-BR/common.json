@@ -655,7 +655,19 @@
       "empty": "Ainda não há agentes personalizados. Adicione um arquivo de função como agents/code-reviewer.md ao espaço de trabalho do agente.",
       "allTools": "Todas as ferramentas de subagente",
       "noTools": "Sem ferramentas",
-      "skipped": "Arquivos ignorados"
+      "skipped": "Arquivos ignorados",
+      "search": "Pesquisar agentes",
+      "refresh": "Atualizar",
+      "retry": "Tentar novamente",
+      "noMatches": "Nenhum agente corresponde à pesquisa.",
+      "run": "Executar…",
+      "runTitle": "Iniciar {{name}}",
+      "runTaskLabel": "Tarefa",
+      "runTaskPlaceholder": "O que este agente deve fazer?",
+      "runStart": "Iniciar tarefa",
+      "showMore": "Mostrar mais",
+      "showLess": "Mostrar menos",
+      "unavailableTool": "Indisponível para subagentes"
     },
     "sections": {
       "interface": "Interface do usuário",

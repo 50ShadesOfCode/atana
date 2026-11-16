@@ -655,7 +655,19 @@
       "empty": "Chưa có trợ lý tùy chỉnh. Thêm tệp vai trò như agents/code-reviewer.md vào không gian làm việc của trợ lý.",
       "allTools": "Tất cả công cụ của trợ lý con",
       "noTools": "Không có công cụ",
-      "skipped": "Tệp bị bỏ qua"
+      "skipped": "Tệp bị bỏ qua",
+      "search": "Tìm trợ lý",
+      "refresh": "Làm mới",
+      "retry": "Thử lại",
+      "noMatches": "Không có trợ lý nào khớp với tìm kiếm.",
+      "run": "Chạy…",
+      "runTitle": "Khởi chạy {{name}}",
+      "runTaskLabel": "Nhiệm vụ",
+      "runTaskPlaceholder": "Trợ lý này nên làm gì?",
+      "runStart": "Bắt đầu nhiệm vụ",
+      "showMore": "Hiện thêm",
+      "showLess": "Thu gọn",
+      "unavailableTool": "Không khả dụng cho trợ lý con"
     },
     "sections": {
       "interface": "Giao diện",

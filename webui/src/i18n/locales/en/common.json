@@ -1802,7 +1802,19 @@
       "empty": "No custom agents yet. Add a role file such as agents/code-reviewer.md to the agent workspace.",
       "allTools": "All subagent tools",
       "noTools": "No tools",
-      "skipped": "Skipped files"
+      "skipped": "Skipped files",
+      "search": "Search agents",
+      "refresh": "Refresh",
+      "retry": "Retry",
+      "noMatches": "No agents match your search.",
+      "run": "Run…",
+      "runTitle": "Start {{name}}",
+      "runTaskLabel": "Task",
+      "runTaskPlaceholder": "What should this agent do?",
+      "runStart": "Start task",
+      "showMore": "Show more",
+      "showLess": "Show less",
+      "unavailableTool": "Not available to subagents"
     },
     "skills": {
       "description": "Choose skills available in chat.",

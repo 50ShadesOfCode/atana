@@ -655,7 +655,19 @@
       "empty": "Aún no hay agentes personalizados. Añade un archivo de rol como agents/code-reviewer.md al espacio de trabajo del agente.",
       "allTools": "Todas las herramientas de subagente",
       "noTools": "Sin herramientas",
-      "skipped": "Archivos omitidos"
+      "skipped": "Archivos omitidos",
+      "search": "Buscar agentes",
+      "refresh": "Actualizar",
+      "retry": "Reintentar",
+      "noMatches": "Ningún agente coincide con la búsqueda.",
+      "run": "Ejecutar…",
+      "runTitle": "Iniciar {{name}}",
+      "runTaskLabel": "Tarea",
+      "runTaskPlaceholder": "¿Qué debe hacer este agente?",
+      "runStart": "Iniciar tarea",
+      "showMore": "Mostrar más",
+      "showLess": "Mostrar menos",
+      "unavailableTool": "No disponible para subagentes"
     },
     "sections": {
       "interface": "Interfaz",

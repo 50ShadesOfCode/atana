@@ -1021,6 +1021,10 @@ class SubagentManager:
         """Return the custom subagent roles available in this workspace."""
         return list(discover_agents(self.workspace).values())
 
+    def available_tool_names(self) -> list[str]:
+        """Return the tools a role without an allowlist receives."""
+        return self._build_tools().tool_names
+
     def _build_subagent_prompt(
         self, workspace: Path | None = None, agent: AgentDefinition | None = None,
     ) -> str:

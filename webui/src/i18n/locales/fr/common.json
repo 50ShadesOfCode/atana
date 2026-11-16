@@ -655,7 +655,19 @@
       "empty": "Aucun agent personnalisé pour le moment. Ajoutez un fichier de rôle comme agents/code-reviewer.md à l'espace de travail de l'agent.",
       "allTools": "Tous les outils de sous-agent",
       "noTools": "Aucun outil",
-      "skipped": "Fichiers ignorés"
+      "skipped": "Fichiers ignorés",
+      "search": "Rechercher des agents",
+      "refresh": "Actualiser",
+      "retry": "Réessayer",
+      "noMatches": "Aucun agent ne correspond à la recherche.",
+      "run": "Exécuter…",
+      "runTitle": "Lancer {{name}}",
+      "runTaskLabel": "Tâche",
+      "runTaskPlaceholder": "Que doit faire cet agent ?",
+      "runStart": "Lancer la tâche",
+      "showMore": "Afficher plus",
+      "showLess": "Afficher moins",
+      "unavailableTool": "Indisponible pour les sous-agents"
     },
     "sections": {
       "interface": "Interface utilisateur",

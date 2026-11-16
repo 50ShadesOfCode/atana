@@ -4,6 +4,7 @@ import asyncio
 import os
 import subprocess
 import sys
+from collections.abc import Collection
 from contextlib import suppress
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
@@ -896,7 +897,7 @@ async def cmd_agents(ctx: CommandContext) -> OutboundMessage:
             "for example `agents/code-reviewer.md`."
         )
     else:
-        content = _agents_list(agents, issues)
+        content = _agents_list(agents, issues, manager.available_tool_names())
     return OutboundMessage(
         channel=ctx.msg.channel,
         chat_id=ctx.msg.chat_id,
@@ -906,11 +907,18 @@ async def cmd_agents(ctx: CommandContext) -> OutboundMessage:
 
 
 def _agents_list(
-    agents: dict[str, AgentDefinition], issues: list[AgentIssue],
+    agents: dict[str, AgentDefinition], issues: list[AgentIssue], available: Collection[str],
 ) -> str:
     lines = [f"Custom agents ({len(agents)}):", ""]
     for name, agent in agents.items():
-        tools = "all subagent tools" if agent.tools is None else (", ".join(agent.tools) or "no tools")
+        if agent.tools is None:
+            tools = "all subagent tools"
+        else:
+            usable = [tool for tool in agent.tools if tool in available]
+            missing = [tool for tool in agent.tools if tool not in available]
+            tools = ", ".join(usable) or "no tools"
+            if missing:
+                tools += f" (unavailable: {', '.join(missing)})"
         lines.append(f"- **{name}** — {catalog_description(agent.description)} (tools: {tools})")
     if issues:
         lines.extend(["", "Skipped files:"])

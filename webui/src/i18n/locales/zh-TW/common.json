@@ -655,7 +655,19 @@
       "empty": "還沒有自訂代理。請把角色檔案（例如 agents/code-reviewer.md）加入代理工作區。",
       "allTools": "全部子代理工具",
       "noTools": "無工具",
-      "skipped": "已略過的檔案"
+      "skipped": "已略過的檔案",
+      "search": "搜尋代理",
+      "refresh": "重新整理",
+      "retry": "重試",
+      "noMatches": "沒有符合搜尋的代理。",
+      "run": "執行…",
+      "runTitle": "啟動 {{name}}",
+      "runTaskLabel": "任務",
+      "runTaskPlaceholder": "這個代理應該做什麼？",
+      "runStart": "開始任務",
+      "showMore": "顯示更多",
+      "showLess": "收合",
+      "unavailableTool": "子代理無法使用"
     },
     "sections": {
       "interface": "介面",

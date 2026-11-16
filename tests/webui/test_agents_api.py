@@ -17,23 +17,33 @@ def test_payload_lists_roles_and_skipped_files(tmp_path: Path) -> None:
     _write_agent(tmp_path, "researcher")
     (tmp_path / "agents" / "broken.md").write_text("---\nname: [unclosed\n---\nBody.\n", encoding="utf-8")
 
-    payload = webui_agents_payload(tmp_path)
+    payload = webui_agents_payload(tmp_path, available_tools=("read_file", "rg"))
 
     assert payload["agents"] == [
         {
             "name": "researcher",
             "description": "researcher description.",
             "tools": None,
+            "tools_missing": [],
             "path": "agents/researcher.md",
         },
         {
             "name": "reviewer",
             "description": "reviewer description.",
             "tools": ["read_file", "rg"],
+            "tools_missing": [],
             "path": "agents/reviewer.md",
         },
     ]
-    assert payload["issues"] == [{"name": "broken", "reason": "invalid metadata"}]
+    assert payload["issues"] == [{"name": "broken", "reason": "frontmatter is not valid YAML"}]
+
+
+def test_payload_marks_unavailable_tools(tmp_path: Path) -> None:
+    _write_agent(tmp_path, "reviewer", tools="read_file, grep")
+
+    payload = webui_agents_payload(tmp_path, available_tools=("read_file", "rg"))
+
+    assert payload["agents"][0]["tools_missing"] == ["grep"]
 
 
 def test_payload_without_agents(tmp_path: Path) -> None:

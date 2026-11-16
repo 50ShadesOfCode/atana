@@ -550,9 +550,10 @@ async def test_webui_agents_route_requires_token_and_hides_paths(
             "name": "reviewer",
             "description": "Reviews diffs.",
             "tools": ["read_file", "rg"],
+            "tools_missing": [],
             "path": "agents/reviewer.md",
         }]
-        assert body["issues"] == [{"name": "broken", "reason": "invalid metadata"}]
+        assert body["issues"] == [{"name": "broken", "reason": "frontmatter is not valid YAML"}]
     finally:
         await channel.stop()
         server_task.cancel()

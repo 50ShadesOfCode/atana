@@ -655,7 +655,19 @@
       "empty": "아직 사용자 지정 에이전트가 없습니다. agents/code-reviewer.md 같은 역할 파일을 에이전트 워크스페이스에 추가하세요.",
       "allTools": "모든 서브에이전트 도구",
       "noTools": "도구 없음",
-      "skipped": "건너뛴 파일"
+      "skipped": "건너뛴 파일",
+      "search": "에이전트 검색",
+      "refresh": "새로 고침",
+      "retry": "다시 시도",
+      "noMatches": "검색과 일치하는 에이전트가 없습니다.",
+      "run": "실행…",
+      "runTitle": "{{name}} 시작",
+      "runTaskLabel": "작업",
+      "runTaskPlaceholder": "이 에이전트가 무엇을 해야 하나요?",
+      "runStart": "작업 시작",
+      "showMore": "더 보기",
+      "showLess": "접기",
+      "unavailableTool": "서브에이전트에서 사용할 수 없음"
     },
     "sections": {
       "interface": "인터페이스",

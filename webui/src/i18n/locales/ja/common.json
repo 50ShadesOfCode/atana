@@ -655,7 +655,19 @@
       "empty": "カスタムエージェントはまだありません。agents/code-reviewer.md のような役割ファイルをエージェントのワークスペースに追加してください。",
       "allTools": "すべてのサブエージェントツール",
       "noTools": "ツールなし",
-      "skipped": "スキップされたファイル"
+      "skipped": "スキップされたファイル",
+      "search": "エージェントを検索",
+      "refresh": "更新",
+      "retry": "再試行",
+      "noMatches": "検索に一致するエージェントはありません。",
+      "run": "実行…",
+      "runTitle": "{{name}} を開始",
+      "runTaskLabel": "タスク",
+      "runTaskPlaceholder": "このエージェントに何をさせますか？",
+      "runStart": "タスクを開始",
+      "showMore": "さらに表示",
+      "showLess": "表示を減らす",
+      "unavailableTool": "サブエージェントでは利用できません"
     },
     "sections": {
       "interface": "インターフェース",

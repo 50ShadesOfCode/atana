@@ -82,7 +82,16 @@ async def test_agents_command_lists_roles_and_skipped_files(tmp_path: Path) -> N
     assert "**reviewer** — Reviews diffs. (tools: read_file, rg)" in out.content
     assert "**researcher** — Researches. (tools: all subagent tools)" in out.content
     assert "Skipped files:" in out.content
-    assert "**broken** — invalid metadata" in out.content
+    assert "**broken** — frontmatter is not valid YAML" in out.content
+
+
+@pytest.mark.asyncio
+async def test_agents_command_marks_unavailable_tools(tmp_path: Path) -> None:
+    _write_agent(tmp_path, "reviewer", tools="read_file, nope")
+
+    out = await cmd_agents(_ctx(_loop(tmp_path)))
+
+    assert "(unavailable: nope)" in out.content
 
 
 @pytest.mark.asyncio

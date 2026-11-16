@@ -655,7 +655,19 @@
       "empty": "Belum ada agen khusus. Tambahkan berkas peran seperti agents/code-reviewer.md ke ruang kerja agen.",
       "allTools": "Semua alat subagen",
       "noTools": "Tanpa alat",
-      "skipped": "Berkas dilewati"
+      "skipped": "Berkas dilewati",
+      "search": "Cari agen",
+      "refresh": "Muat ulang",
+      "retry": "Coba lagi",
+      "noMatches": "Tidak ada agen yang cocok dengan pencarian.",
+      "run": "Jalankan…",
+      "runTitle": "Mulai {{name}}",
+      "runTaskLabel": "Tugas",
+      "runTaskPlaceholder": "Apa yang harus dilakukan agen ini?",
+      "runStart": "Mulai tugas",
+      "showMore": "Tampilkan lebih",
+      "showLess": "Tampilkan lebih sedikit",
+      "unavailableTool": "Tidak tersedia untuk subagen"
     },
     "sections": {
       "interface": "Antarmuka",
