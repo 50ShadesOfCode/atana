@@ -64,6 +64,12 @@ Fork-only files (no upstream counterpart): `webui/src/components/thread/useModel
 
 `nanobot/agent/tools/filesystem.py` is no longer edited by the fork: upstream moved writes to `nanobot/execution/files.py`, which now carries the atomic-write seam. Upstream tests that patched `Path.replace` patch `nanobot.utils.file_io.replace_atomic` instead, the step that can fail.
 
+### Audit fixes (e03e8134a)
+
+- `nanobot/agent/memory.py` — `compact_history()` shares `_append_lock` with history appends
+- `nanobot/config/schema.py` — `max_tool_result_chars` requires a positive value
+- `nanobot/config/loader.py`, `nanobot/webui/ws_http.py` — already listed above; future edits there must also keep the 0600 config mode and the WebUI cron default timezone
+
 ## Releases
 
 Upstream tags are kept as they are. Fork releases are tagged `dev-YYYY.MM.DD` from `dev`.
