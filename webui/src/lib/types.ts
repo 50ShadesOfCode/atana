@@ -380,6 +380,23 @@ export interface SkillDetail extends SkillSummary {
 
 export interface SkillsPayload { skills: SkillSummary[]; }
 
+export interface AgentSummary {
+  name: string;
+  description: string;
+  tools: string[] | null;
+  path: string;
+}
+
+export interface AgentIssue {
+  name: string;
+  reason: string;
+}
+
+export interface AgentsPayload {
+  agents: AgentSummary[];
+  issues: AgentIssue[];
+}
+
 export interface SkillActionPayload extends SkillsPayload {
   last_action: {
     name: string;

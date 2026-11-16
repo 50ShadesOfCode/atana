@@ -10,6 +10,7 @@ import { SharedProxySetupDialog } from "@/components/settings/shared/SharedProxy
 import { SettingsSectionSkeleton } from "@/components/settings/shared/SettingsSectionSkeleton";
 
 import { SkillsCatalogSettings } from "@/components/settings/SkillsCatalogSettings";
+import { AgentsCatalogSettings } from "@/components/settings/AgentsCatalogSettings";
 import { ImageGenerationSettings } from "@/components/settings/capabilities/ImageGenerationSettings";
 import { AdvancedSettings } from "@/components/settings/capabilities/SecuritySettings";
 import { TranscriptionSettings } from "@/components/settings/capabilities/TranscriptionSettings";
@@ -617,13 +618,15 @@ export function SettingsPage({
         );
       case "skills":
         return <SkillsCatalogSettings skills={skills} loading={skillsLoading} error={skillsError} />;
+      case "subagents":
+        return <AgentsCatalogSettings />;
       default:
         return renderSettingsSection(section, embedded);
     }
   };
   // Appearance reads only browser-local preferences, not the gateway settings snapshot.
   const localSection = activeSection === "appearance";
-  const sectionReady = localSection || settings !== null || activeSection === "skills" || activeSection === "apps"
+  const sectionReady = localSection || settings !== null || activeSection === "skills" || activeSection === "subagents" || activeSection === "apps"
     || activeSection === "channels" || activeSection === "automations";
 
   return (

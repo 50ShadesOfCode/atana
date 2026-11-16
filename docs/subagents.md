@@ -32,6 +32,8 @@ subagent(action="create", agent="code-reviewer", task="review the current diff")
 
 The role's name and description appear in the `subagent` tool description, so the main agent knows which roles exist. Each role task is labelled with the role name, which is what the WebUI and TUI show in the task list. Without `agent=` the tool behaves as before: a general-purpose subagent with every subagent tool.
 
+To see the roles, open **Settings → Subagents** in the WebUI or ask for `/agents` in any chat. To start one by hand, send `/agents run <role> <task>`; the task runs in the current conversation and reports back there.
+
 ## Tool names
 
 Use nanobot's names inside `tools`:

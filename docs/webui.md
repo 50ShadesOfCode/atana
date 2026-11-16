@@ -257,6 +257,12 @@ Marketplace skills are third-party instructions and may include executable scrip
 
 Discover marks a skill as installed only when its recorded marketplace source matches. A skill with the same name from another source is a name conflict, not another installed copy. Older or manually copied skills without a source record remain usable and show “Installed source unknown.” Review the existing skill in **Installed** before removing it if you want a different source; installation never replaces it automatically. New installs keep a small `.nanobot-origin.json` receipt beside `SKILL.md`. Keep that receipt with the skill when moving or backing up the workspace. Older nanobot versions ignore it; no skill-directory rename or history migration is required.
 
+## Subagents
+
+Open **Settings → Subagents** to see the custom subagent roles defined in the agent workspace: each role's description, the tools it may use, and the files that were skipped because their frontmatter is invalid. Roles are edited as files, not in the browser; see [`subagents.md`](./subagents.md) for the format.
+
+You can also list roles from any chat with `/agents`, and start one by hand with `/agents run <role> <task>`. The task runs in the current conversation, so its progress and results appear in the same topic.
+
 ## Automations
 
 Automations are agent turns that run later in a linked topic. Create them from the topic or channel where they are supposed to run so nanobot keeps the correct target context. When an automation runs, it normally delivers the result back to that topic.

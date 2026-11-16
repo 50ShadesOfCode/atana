@@ -624,6 +624,7 @@
       "ariaLabel": "設定セクション"
     },
     "nav": {
+      "subagents": "サブエージェント",
       "about": "nanobot について",
       "capabilities": "機能",
       "general": "一般",
@@ -645,6 +646,16 @@
       "apps": "アプリ",
       "automations": "自動タスク",
       "skills": "スキル"
+    },
+    "subagents": {
+      "title": "カスタムエージェント",
+      "description": "エージェントのワークスペースにある agents フォルダーで定義された役割です。エージェントは作業を任せるときに名前で選び、/agents run <role> <task> で手動でも開始できます。",
+      "loading": "エージェントを読み込み中…",
+      "loadFailed": "カスタムエージェントを読み込めませんでした。",
+      "empty": "カスタムエージェントはまだありません。agents/code-reviewer.md のような役割ファイルをエージェントのワークスペースに追加してください。",
+      "allTools": "すべてのサブエージェントツール",
+      "noTools": "ツールなし",
+      "skipped": "スキップされたファイル"
     },
     "sections": {
       "interface": "インターフェース",

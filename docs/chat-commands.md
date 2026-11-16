@@ -22,6 +22,8 @@ These commands work inside chat channels and interactive agent sessions:
 | `/dream-prompt` | Show how Dream is being guided for memory |
 | `/dream-prompt init` | Create an editable Dream memory guide at `prompts/dream.md` |
 | `/skill` | List enabled skills and their descriptions |
+| `/agents` | List custom subagent roles defined in the workspace |
+| `/agents run <role> <task>` | Start a custom subagent role for the current conversation |
 | `/trigger` | Show local trigger usage |
 | `/trigger <name>` | Create a named local trigger for the current chat/session |
 | `/pairing` | List pending pairing requests |

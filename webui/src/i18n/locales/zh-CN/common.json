@@ -804,6 +804,7 @@
       "ariaLabel": "设置分区"
     },
     "nav": {
+      "subagents": "子代理",
       "about": "关于",
       "capabilities": "功能",
       "general": "通用",
@@ -825,6 +826,16 @@
       "automations": "自动任务",
       "skills": "技能",
       "memory": "记忆"
+    },
+    "subagents": {
+      "title": "自定义代理",
+      "description": "在代理工作区的 agents 文件夹中定义的角色。代理在委派工作时按名称选择一个，也可以用 /agents run <role> <task> 手动启动。",
+      "loading": "正在加载代理…",
+      "loadFailed": "无法加载自定义代理。",
+      "empty": "还没有自定义代理。把一个角色文件（如 agents/code-reviewer.md）加入代理工作区。",
+      "allTools": "全部子代理工具",
+      "noTools": "无工具",
+      "skipped": "已跳过的文件"
     },
     "sections": {
       "interface": "界面",

@@ -40,45 +40,64 @@ class AgentDefinition:
     path: Path
 
 
+@dataclass(frozen=True, slots=True)
+class AgentIssue:
+    """A role file that could not be loaded, and the reason."""
+
+    name: str
+    reason: str
+
+
 def discover_agents(workspace: Path) -> dict[str, AgentDefinition]:
     """Load the roles defined in ``<workspace>/agents``; invalid files are skipped."""
+    return inspect_agents(workspace)[0]
+
+
+def inspect_agents(workspace: Path) -> tuple[dict[str, AgentDefinition], list[AgentIssue]]:
+    """Load the roles and report the files that had to be skipped."""
     root = workspace.expanduser() / AGENTS_DIR
     if not root.is_dir():
-        return {}
+        return {}, []
     agents: dict[str, AgentDefinition] = {}
+    issues: list[AgentIssue] = []
     for path in sorted(root.glob("*.md")):
-        agent = _load_agent(path)
+        agent, reason = _load_agent(path)
         if agent is not None:
             agents[agent.name] = agent
-    return agents
+        elif reason is not None:
+            issues.append(AgentIssue(name=path.stem, reason=reason))
+    return agents, issues
 
 
-def _load_agent(path: Path) -> AgentDefinition | None:
+def _load_agent(path: Path) -> tuple[AgentDefinition | None, str | None]:
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         logger.warning("Ignoring agent definition '{}': unreadable", path)
-        return None
+        return None, "unreadable"
     metadata = parse_skill_metadata(text)
     if metadata is None or not valid_skill_metadata(metadata, path.stem):
         logger.warning("Ignoring agent definition '{}': invalid metadata", path)
-        return None
+        return None, "invalid metadata"
     try:
         tools = _parse_tools(metadata.get("tools"))
     except ValueError:
         logger.warning("Ignoring agent definition '{}': invalid tools", path)
-        return None
+        return None, "invalid tools"
     match = SKILL_FRONTMATTER.match(text)
     prompt = text[match.end():].strip() if match else text.strip()
     if not prompt:
         logger.warning("Ignoring agent definition '{}': empty prompt", path)
-        return None
-    return AgentDefinition(
-        name=path.stem,
-        description=cast(str, metadata["description"]).strip(),
-        tools=tools,
-        prompt=prompt,
-        path=path,
+        return None, "empty prompt"
+    return (
+        AgentDefinition(
+            name=path.stem,
+            description=cast(str, metadata["description"]).strip(),
+            tools=tools,
+            prompt=prompt,
+            path=path,
+        ),
+        None,
     )
 
 

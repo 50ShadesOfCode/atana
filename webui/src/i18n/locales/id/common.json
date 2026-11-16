@@ -624,6 +624,7 @@
       "ariaLabel": "Bagian pengaturan"
     },
     "nav": {
+      "subagents": "Subagen",
       "about": "Tentang",
       "capabilities": "Fitur",
       "general": "Umum",
@@ -645,6 +646,16 @@
       "apps": "Aplikasi",
       "automations": "Otomasi",
       "skills": "Keterampilan"
+    },
+    "subagents": {
+      "title": "Agen khusus",
+      "description": "Peran yang ditentukan di folder agents pada ruang kerja agen. Agen memilih satu berdasarkan nama saat mendelegasikan pekerjaan, dan /agents run <role> <task> menjalankannya secara manual.",
+      "loading": "Memuat agen…",
+      "loadFailed": "Tidak dapat memuat agen khusus.",
+      "empty": "Belum ada agen khusus. Tambahkan berkas peran seperti agents/code-reviewer.md ke ruang kerja agen.",
+      "allTools": "Semua alat subagen",
+      "noTools": "Tanpa alat",
+      "skipped": "Berkas dilewati"
     },
     "sections": {
       "interface": "Antarmuka",

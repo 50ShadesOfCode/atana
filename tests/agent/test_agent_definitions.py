@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from nanobot.agent.agents import discover_agents
+from nanobot.agent.agents import discover_agents, inspect_agents
 
 
 def _write(workspace: Path, name: str, text: str) -> None:
@@ -105,3 +105,17 @@ def test_skips_broken_yaml_and_keeps_valid_agents(tmp_path):
 
 def test_missing_agents_directory_returns_empty(tmp_path):
     assert discover_agents(tmp_path) == {}
+
+
+def test_inspect_agents_reports_skipped_files_with_reasons(tmp_path):
+    _write(tmp_path, "reviewer", "---\nname: reviewer\ndescription: Reviews.\n---\nReview.\n")
+    _write(tmp_path, "broken", "---\nname: [unclosed\n---\nBody.\n")
+    _write(tmp_path, "typed", "---\nname: typed\ndescription: Typed.\ntools: 5\n---\nBody.\n")
+
+    agents, issues = inspect_agents(tmp_path)
+
+    assert list(agents) == ["reviewer"]
+    assert {(issue.name, issue.reason) for issue in issues} == {
+        ("broken", "invalid metadata"),
+        ("typed", "invalid tools"),
+    }

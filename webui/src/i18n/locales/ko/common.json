@@ -624,6 +624,7 @@
       "ariaLabel": "설정 섹션"
     },
     "nav": {
+      "subagents": "서브에이전트",
       "about": "정보",
       "capabilities": "기능",
       "general": "일반",
@@ -645,6 +646,16 @@
       "apps": "앱",
       "automations": "자동화",
       "skills": "스킬"
+    },
+    "subagents": {
+      "title": "사용자 지정 에이전트",
+      "description": "에이전트 워크스페이스의 agents 폴더에 정의된 역할입니다. 에이전트는 작업을 위임할 때 이름으로 하나를 고르고, /agents run <role> <task> 로 직접 시작할 수도 있습니다.",
+      "loading": "에이전트 불러오는 중…",
+      "loadFailed": "사용자 지정 에이전트를 불러오지 못했습니다.",
+      "empty": "아직 사용자 지정 에이전트가 없습니다. agents/code-reviewer.md 같은 역할 파일을 에이전트 워크스페이스에 추가하세요.",
+      "allTools": "모든 서브에이전트 도구",
+      "noTools": "도구 없음",
+      "skipped": "건너뛴 파일"
     },
     "sections": {
       "interface": "인터페이스",

@@ -624,6 +624,7 @@
       "ariaLabel": "Secciones de ajustes"
     },
     "nav": {
+      "subagents": "Subagentes",
       "about": "Acerca de",
       "capabilities": "Funciones",
       "general": "General",
@@ -645,6 +646,16 @@
       "apps": "Aplicaciones",
       "automations": "Automatizaciones",
       "skills": "Habilidades"
+    },
+    "subagents": {
+      "title": "Agentes personalizados",
+      "description": "Roles definidos en la carpeta agents del espacio de trabajo del agente. El agente elige uno por nombre al delegar trabajo, y /agents run <role> <task> inicia uno a mano.",
+      "loading": "Cargando agentes…",
+      "loadFailed": "No se pudieron cargar los agentes personalizados.",
+      "empty": "Aún no hay agentes personalizados. Añade un archivo de rol como agents/code-reviewer.md al espacio de trabajo del agente.",
+      "allTools": "Todas las herramientas de subagente",
+      "noTools": "Sin herramientas",
+      "skipped": "Archivos omitidos"
     },
     "sections": {
       "interface": "Interfaz",

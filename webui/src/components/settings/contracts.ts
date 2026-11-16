@@ -17,6 +17,7 @@ export type SettingsSectionKey =
   | "automations"
   | "memory"
   | "skills"
+  | "subagents"
   | "runtime"
   | "advanced";
 

@@ -624,6 +624,7 @@
       "ariaLabel": "Mục cài đặt"
     },
     "nav": {
+      "subagents": "Trợ lý con",
       "about": "Giới thiệu",
       "capabilities": "Tính năng",
       "general": "Chung",
@@ -645,6 +646,16 @@
       "apps": "Ứng dụng",
       "automations": "Tự động hóa",
       "skills": "Kỹ năng"
+    },
+    "subagents": {
+      "title": "Trợ lý tùy chỉnh",
+      "description": "Vai trò được định nghĩa trong thư mục agents của không gian làm việc của trợ lý. Trợ lý chọn một vai trò theo tên khi giao việc, và /agents run <role> <task> khởi chạy thủ công.",
+      "loading": "Đang tải trợ lý…",
+      "loadFailed": "Không thể tải trợ lý tùy chỉnh.",
+      "empty": "Chưa có trợ lý tùy chỉnh. Thêm tệp vai trò như agents/code-reviewer.md vào không gian làm việc của trợ lý.",
+      "allTools": "Tất cả công cụ của trợ lý con",
+      "noTools": "Không có công cụ",
+      "skipped": "Tệp bị bỏ qua"
     },
     "sections": {
       "interface": "Giao diện",

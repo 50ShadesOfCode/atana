@@ -624,6 +624,7 @@
       "ariaLabel": "設定區段"
     },
     "nav": {
+      "subagents": "子代理",
       "about": "關於",
       "capabilities": "功能",
       "general": "一般",
@@ -645,6 +646,16 @@
       "apps": "應用程式",
       "automations": "自動任務",
       "skills": "技能"
+    },
+    "subagents": {
+      "title": "自訂代理",
+      "description": "在代理工作區的 agents 資料夾中定義的角色。代理在委派工作時依名稱選擇一個，也可以用 /agents run <role> <task> 手動啟動。",
+      "loading": "正在載入代理…",
+      "loadFailed": "無法載入自訂代理。",
+      "empty": "還沒有自訂代理。請把角色檔案（例如 agents/code-reviewer.md）加入代理工作區。",
+      "allTools": "全部子代理工具",
+      "noTools": "無工具",
+      "skipped": "已略過的檔案"
     },
     "sections": {
       "interface": "介面",

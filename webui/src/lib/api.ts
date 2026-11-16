@@ -1,6 +1,7 @@
 import { isContextGraph, isContextInspection } from "@/lib/context-graph";
 import { isCompactionPhase, isCompactionReason } from "../../../packages/client-events/notifications";
 import type {
+  AgentsPayload,
   AutomationChatsPayload,
   AutomationChatUpdate,
   AutomationsPayload,
@@ -775,6 +776,18 @@ export async function fetchSkills(
 ): Promise<SkillsPayload> {
   return request<SkillsPayload>(
     `${base}/api/webui/skills`,
+    token,
+    undefined,
+    API_READ_TIMEOUT_MS,
+  );
+}
+
+export async function fetchAgents(
+  token: string,
+  base: string = "",
+): Promise<AgentsPayload> {
+  return request<AgentsPayload>(
+    `${base}/api/webui/agents`,
     token,
     undefined,
     API_READ_TIMEOUT_MS,

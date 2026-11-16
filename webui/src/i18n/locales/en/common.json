@@ -824,6 +824,7 @@
       "apps": "Apps",
       "automations": "Automations",
       "skills": "Skills",
+      "subagents": "Subagents",
       "memory": "Memory"
     },
     "sections": {
@@ -1792,6 +1793,16 @@
       "pasteCallbackToContinue": "Paste the callback URL to continue.",
       "waitingForCallback": "Waiting for sign-in to finish…",
       "finishSignIn": "Finish sign-in"
+    },
+    "subagents": {
+      "title": "Custom agents",
+      "description": "Roles defined in the agents folder of the agent workspace. The agent picks one by name when it delegates work, and /agents run <role> <task> starts one by hand.",
+      "loading": "Loading agents…",
+      "loadFailed": "Could not load custom agents.",
+      "empty": "No custom agents yet. Add a role file such as agents/code-reviewer.md to the agent workspace.",
+      "allTools": "All subagent tools",
+      "noTools": "No tools",
+      "skipped": "Skipped files"
     },
     "skills": {
       "description": "Choose skills available in chat.",

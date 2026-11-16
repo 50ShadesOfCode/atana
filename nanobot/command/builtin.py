@@ -12,6 +12,7 @@ from loguru import logger
 
 from nanobot import __version__
 from nanobot.agent import model_presets as preset_helpers
+from nanobot.agent.agents import AgentDefinition, AgentIssue, inspect_agents
 from nanobot.bus.events import OutboundMessage
 from nanobot.command.router import CommandContext, CommandRouter
 from nanobot.command.spec import BuiltinCommandSpec
@@ -122,6 +123,14 @@ CORE_COMMAND_SPECS: tuple[BuiltinCommandSpec, ...] = (
         "List skills",
         "List all enabled skills available to the agent.",
         "wrench",
+    ),
+    BuiltinCommandSpec(
+        "/agents",
+        "Custom agents",
+        "List custom subagent roles, or start one: /agents run <role> <task>.",
+        "bot",
+        arg_hint="[run <role> <task>]",
+        accepts_args=True,
     ),
     BuiltinCommandSpec(
         "/help",
@@ -866,6 +875,66 @@ async def cmd_skill(ctx: CommandContext) -> OutboundMessage:
     )
 
 
+async def cmd_agents(ctx: CommandContext) -> OutboundMessage:
+    """List custom subagent roles, or start one with ``/agents run <role> <task>``."""
+    manager = ctx.loop.subagents
+    agents, issues = inspect_agents(manager.workspace)
+    args = ctx.args.strip()
+    if args.startswith("run "):
+        role, _, task = args[len("run "):].strip().partition(" ")
+        content = await _start_agent_role(ctx, agents, role.strip(), task.strip())
+    elif args:
+        content = "Usage: /agents — list roles\n/agents run <role> <task> — start a role"
+    elif not agents and not issues:
+        content = (
+            "No custom agents. Add a role file to `agents/` in the agent workspace, "
+            "for example `agents/code-reviewer.md`."
+        )
+    else:
+        content = _agents_list(agents, issues)
+    return OutboundMessage(
+        channel=ctx.msg.channel,
+        chat_id=ctx.msg.chat_id,
+        content=content,
+        metadata=dict(ctx.msg.metadata or {}),
+    )
+
+
+def _agents_list(
+    agents: dict[str, AgentDefinition], issues: list[AgentIssue],
+) -> str:
+    lines = [f"Custom agents ({len(agents)}):", ""]
+    for name, agent in agents.items():
+        tools = "all subagent tools" if agent.tools is None else (", ".join(agent.tools) or "no tools")
+        lines.append(f"- **{name}** — {agent.description} (tools: {tools})")
+    if issues:
+        lines.extend(["", "Skipped files:"])
+        lines.extend(f"- **{issue.name}** — {issue.reason}" for issue in issues)
+    return "\n".join(lines)
+
+
+async def _start_agent_role(
+    ctx: CommandContext, agents: dict[str, AgentDefinition], role: str, task: str,
+) -> str:
+    definition = agents.get(role)
+    if definition is None:
+        available = ", ".join(agents) or "none"
+        return f"Unknown agent '{role}'. Available: {available}"
+    if not task:
+        return "Usage: /agents run <role> <task>"
+    if ctx.runtime is None:
+        return "Cannot start an agent task here: no active model runtime."
+    return await ctx.loop.subagents.spawn(
+        task=task,
+        label=None,
+        origin_channel=ctx.msg.channel,
+        origin_chat_id=ctx.msg.chat_id,
+        session_key=ctx.key,
+        runtime=ctx.runtime,
+        agent=definition,
+    )
+
+
 async def cmd_trigger(ctx: CommandContext) -> OutboundMessage:
     """Create a local trigger bound to the current session."""
     name = ctx.args.strip()
@@ -952,6 +1021,8 @@ def register_core_commands(router: CommandRouter) -> None:
     router.exact("/evaluator-prompt", cmd_evaluator_prompt)
     router.prefix("/evaluator-prompt ", cmd_evaluator_prompt)
     router.exact("/skill", cmd_skill)
+    router.exact("/agents", cmd_agents)
+    router.prefix("/agents ", cmd_agents)
     router.exact("/help", cmd_help)
     router.exact("/pairing", cmd_pairing)
     router.prefix("/pairing ", cmd_pairing)

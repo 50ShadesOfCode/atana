@@ -10,7 +10,7 @@ import {
 } from "@/components/icons/product-icons";
 import { useContext, useRef, useState } from "react";
 import { HostNavigationContext, HostSwitcher } from "@/components/remote/HostSwitcher";
-import { Bell, Check, ChevronDown, ChevronLeft, LogOut, Loader2, type LucideIcon } from "lucide-react";
+import { Bell, Bot, Check, ChevronDown, ChevronLeft, LogOut, Loader2, type LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -34,6 +34,7 @@ const SETTINGS_NAV_ITEMS: Array<{ key: SettingsSectionKey; icon: LucideIcon; fal
   { key: "appearance", icon: AppearanceIcon, fallback: "Appearance" },
   { key: "notifications", icon: Bell, fallback: "Notifications" },
   { key: "models", icon: ModelsIcon, fallback: "Models" },
+  { key: "subagents", icon: Bot, fallback: "Subagents" },
   { key: "capabilities", icon: CapabilitiesIcon, fallback: "Capabilities" },
   { key: "runtime", icon: SystemIcon, fallback: "System" },
   { key: "advanced", icon: AdvancedIcon, fallback: "Advanced" },
@@ -44,6 +45,7 @@ export function standaloneSectionTitle(section: SettingsSectionKey): string {
   if (section === "apps") return "Apps";
   if (section === "automations") return "Automations";
   if (section === "skills") return "Skills";
+  if (section === "subagents") return "Subagents";
   if (section === "channels") return "Channels";
   return SETTINGS_NAV_ITEMS.find((item) => item.key === section)?.fallback ?? "Settings";
 }

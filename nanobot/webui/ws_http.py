@@ -42,6 +42,7 @@ from nanobot.session.session_handles import (
     SessionHandleResolver,
 )
 from nanobot.triggers.local_types import LocalTrigger
+from nanobot.webui.agents_api import webui_agents_payload
 from nanobot.webui.automation_chats import AutomationChat, automation_chats
 from nanobot.webui.automation_results import cron_run_response, trigger_run_response
 from nanobot.webui.file_preview import (
@@ -1778,6 +1779,8 @@ class GatewayHTTPHandler:
             return await self._handle_webui_skill_delete(connection, request)
         if got == "/api/webui/skills":
             return await self._handle_webui_skills(request)
+        if got == "/api/webui/agents":
+            return await self._handle_webui_agents(request)
         m = re.match(r"^/api/webui/skills/([^/]+)$", got)
         if m:
             return await self._handle_webui_skill_detail(request, m.group(1))
@@ -1860,6 +1863,12 @@ class GatewayHTTPHandler:
         if not self.check_api_token(request):
             return _http_error(401, "Unauthorized")
         return _http_json_response(await self._load_webui_skills())
+
+    async def _handle_webui_agents(self, request: WsRequest) -> Response:
+        if not self.check_api_token(request):
+            return _http_error(401, "Unauthorized")
+        payload = await asyncio.to_thread(webui_agents_payload, self.skills_workspace_path)
+        return _http_json_response(payload)
 
     async def _handle_webui_skills_search(self, request: WsRequest) -> Response:
         if not self.check_api_token(request):
