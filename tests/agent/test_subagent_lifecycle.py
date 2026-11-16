@@ -10,6 +10,7 @@ from nanobot.agent.hook import AgentHookContext
 from nanobot.agent.memory import Consolidator
 from nanobot.agent.runner import AgentRunResult
 from nanobot.agent.subagent import (
+    SubagentControlError,
     SubagentStatus,
     _SubagentHook,
 )
@@ -647,3 +648,19 @@ async def test_spawn_uses_role_prompt_and_label(tmp_path):
     spec = captured["spec"]
     assert "## Role: reviewer" in spec.initial_messages[0]["content"]
     assert "reviewer: review the diff" in reply
+
+
+def test_allowlist_keeps_only_listed_tools(tmp_path):
+    registry = _manager(tmp_path)._build_tools(allow=("read_file",))
+
+    assert set(registry.tool_names) == {"read_file"}
+
+
+def test_allowlist_rejects_an_unknown_tool(tmp_path):
+    with pytest.raises(SubagentControlError, match="nope"):
+        _manager(tmp_path)._build_tools(allow=("read_file", "nope"))
+
+
+def test_empty_allowlist_rejects_the_task(tmp_path):
+    with pytest.raises(SubagentControlError):
+        _manager(tmp_path)._build_tools(allow=())

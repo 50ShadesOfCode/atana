@@ -567,6 +567,7 @@ class SubagentManager:
         workspace: Path | None = None,
         tools_config: ToolsConfig | None = None,
         exec_manager: ExecSessionManager | None = None,
+        allow: tuple[str, ...] | None = None,
     ) -> ToolRegistry:
         root = self.workspace if workspace is None else workspace
         registry = ToolRegistry()
@@ -583,6 +584,15 @@ class SubagentManager:
             ),
         )
         ToolLoader().load(ctx, registry, scope="subagent")
+        if allow is not None:
+            missing = [name for name in allow if not registry.has(name)]
+            if missing:
+                raise SubagentControlError(f"unavailable tools: {', '.join(missing)}")
+            for name in registry.tool_names:
+                if name not in allow:
+                    registry.unregister(name)
+            if not registry.tool_names:
+                raise SubagentControlError("agent allows no available tools")
         return registry
 
     async def _create_task(
@@ -824,7 +834,11 @@ class SubagentManager:
             cfg = self._subagent_tools_config()
             cfg.restrict_to_workspace = workspace_scope.restrict_to_workspace
         # Construct from the agent workspace; the bound scope below supplies the project cwd.
-        tools = self._build_tools(tools_config=cfg, exec_manager=record.exec_manager)
+        tools = self._build_tools(
+            tools_config=cfg,
+            exec_manager=record.exec_manager,
+            allow=record.agent.tools if record.agent is not None else None,
+        )
         system_prompt = self._build_subagent_prompt(workspace=root, agent=record.agent)
         messages: list[dict[str, Any]] = [
             {"role": "system", "content": system_prompt},
