@@ -1672,7 +1672,10 @@ class GatewayHTTPHandler:
             values = _automation_values_from_request(request)
             if values is None:
                 return _http_error(400, "invalid automation update payload")
-            parsed = _parse_automation_update(values, current_job=job)
+            parsed = _parse_automation_update(
+                values, current_job=job,
+                default_timezone=self.settings.config.load().agents.defaults.timezone,
+            )
             if isinstance(parsed, str):
                 return _http_error(400, parsed)
             try:
@@ -2142,6 +2145,7 @@ def _parse_automation_update(
     values: dict[str, Any],
     *,
     current_job: CronJob | None = None,
+    default_timezone: str | None = None,
 ) -> dict[str, Any] | str:
     update: dict[str, Any] = {}
     if "name" in values:
@@ -2164,7 +2168,9 @@ def _parse_automation_update(
         raw_schedule = values.get("schedule")
         if not isinstance(raw_schedule, dict):
             return "schedule must be an object"
-        parsed_schedule = _parse_automation_schedule(cast(dict[str, Any], raw_schedule))
+        parsed_schedule = _parse_automation_schedule(
+            cast(dict[str, Any], raw_schedule), default_timezone=default_timezone,
+        )
         if isinstance(parsed_schedule, str):
             return parsed_schedule
         if current_job is not None and _schedule_matches_job(parsed_schedule, current_job):
@@ -2193,7 +2199,9 @@ def _parse_local_trigger_update(values: dict[str, Any]) -> dict[str, Any] | str:
     return update
 
 
-def _parse_automation_schedule(values: dict[str, Any]) -> CronSchedule | str:
+def _parse_automation_schedule(
+    values: dict[str, Any], *, default_timezone: str | None = None,
+) -> CronSchedule | str:
     raw_kind = values.get("kind")
     if not isinstance(raw_kind, str):
         return "schedule kind must be a string"
@@ -2214,7 +2222,7 @@ def _parse_automation_schedule(values: dict[str, Any]) -> CronSchedule | str:
         if raw_tz is not None and not isinstance(raw_tz, str):
             return "cron schedule timezone must be a string"
         tz = raw_tz.strip() if isinstance(raw_tz, str) else ""
-        return CronSchedule(kind="cron", expr=expr, tz=tz or None)
+        return CronSchedule(kind="cron", expr=expr, tz=tz or default_timezone)
     if kind == "at":
         at_ms = _positive_int(values.get("at_ms"))
         if at_ms is None:

@@ -187,6 +187,28 @@ class TestHistoryWithCursor:
         entries = store.read_unprocessed_history(since_cursor=0)
         assert [entry["cursor"] for entry in entries] == list(range(21, 101))
 
+    def test_compact_history_holds_append_lock(self, tmp_path, monkeypatch):
+        store = MemoryStore(tmp_path, max_history_entries=2)
+        for index in range(1, 5):
+            store.append_history(f"event {index}")
+        store.set_last_dream_cursor(4)
+        original_read, original_write = store._read_entries, store._write_entries
+
+        def guarded_read():
+            assert store._append_lock.locked()
+            return original_read()
+
+        def guarded_write(entries):
+            assert store._append_lock.locked()
+            return original_write(entries)
+
+        monkeypatch.setattr(store, "_read_entries", guarded_read)
+        monkeypatch.setattr(store, "_write_entries", guarded_write)
+
+        store.compact_history()
+
+        assert [entry["cursor"] for entry in original_read() if entry["cursor"] > 0] == [3, 4]
+
     def test_write_entries_uses_atomic_write(self, tmp_path):
         store = MemoryStore(tmp_path)
         store.append_history("event 1")

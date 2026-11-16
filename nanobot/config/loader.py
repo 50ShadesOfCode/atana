@@ -209,10 +209,9 @@ def save_config(config: Config, config_path: Path | None = None) -> None:
 
     # Temp + replace so a crash mid-write cannot leave a truncated config.json.
     write_text_atomic(path, json.dumps(data, indent=2, ensure_ascii=False))
-    if not existed:
-        # The file can hold provider keys; do not rely on the user's umask.
-        with suppress(OSError):
-            path.chmod(0o600)
+    # The file can hold provider keys; a pre-existing loose mode must not survive.
+    with suppress(OSError):
+        path.chmod(0o600)
 
 
 def merge_missing_defaults(existing: object, defaults: object) -> object:

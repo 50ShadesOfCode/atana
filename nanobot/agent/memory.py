@@ -390,31 +390,34 @@ class MemoryStore:
         """Drop oldest processed entries without discarding pending Dream input."""
         if self.max_history_entries <= 0:
             return
-        entries = self._read_entries()
-        if len(entries) <= self.max_history_entries:
-            return
-        last_dream_cursor = self.get_last_dream_cursor()
-        first_unprocessed = next(
-            (
-                index
-                for index, entry in enumerate(entries)
-                if (
-                    (cursor := self._valid_cursor(entry.get("cursor"))) is not None
-                    and cursor > last_dream_cursor
-                )
-            ),
-            len(entries),
-        )
-        keep_from = min(len(entries) - self.max_history_entries, first_unprocessed)
-        kept = entries[keep_from:]
-        if len(kept) > self.max_history_entries:
-            logger.warning(
-                "History compaction retained {} unprocessed entries beyond the configured "
-                "limit of {}",
-                len(kept),
-                self.max_history_entries,
+        # The rewrite replaces the inode; an append must not slip between the
+        # read and the replacement or its entry would be lost.
+        with self._append_lock:
+            entries = self._read_entries()
+            if len(entries) <= self.max_history_entries:
+                return
+            last_dream_cursor = self.get_last_dream_cursor()
+            first_unprocessed = next(
+                (
+                    index
+                    for index, entry in enumerate(entries)
+                    if (
+                        (cursor := self._valid_cursor(entry.get("cursor"))) is not None
+                        and cursor > last_dream_cursor
+                    )
+                ),
+                len(entries),
             )
-        self._write_entries(kept)
+            keep_from = min(len(entries) - self.max_history_entries, first_unprocessed)
+            kept = entries[keep_from:]
+            if len(kept) > self.max_history_entries:
+                logger.warning(
+                    "History compaction retained {} unprocessed entries beyond the configured "
+                    "limit of {}",
+                    len(kept),
+                    self.max_history_entries,
+                )
+            self._write_entries(kept)
 
 
     def _read_entries(self) -> list[dict[str, Any]]:
