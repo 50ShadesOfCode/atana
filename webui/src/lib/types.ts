@@ -1342,6 +1342,7 @@ export interface McpPresetInfo {
   error?: string | null;
   enabled_tools?: string[];
   source?: "preset" | "custom" | string;
+  managed_by_cli?: string | null;
   manifest?: AppManifest;
 }
 
